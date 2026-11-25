@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Projeção de Encargos – Painel do Mercado Livre de Energia</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5f6b7a;--bd:#d8dde3;--c1:#2e8b57;--s1:#00243B;--s2:#00979C;--s3:#00DAAE;--s4:#104862;--grid:#e3e7ec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--card:#1d232a;--tx:#e8ecf0;--mut:#9aa6b4;--bd:#323b45;--c1:#5fd392;--s1:#00243B;--s2:#00979C;--s3:#00DAAE;--s4:#104862;--grid:#2c343d}}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:900px;margin:0 auto;padding:20px 16px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{margin:0 0 20px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.item{display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--card);border:1px solid var(--bd);border-radius:12px;color:var(--tx);text-decoration:none}
+a.item:hover{border-color:var(--c1)}
+.item h2{font-size:1.1rem;margin:0}
+.item p{margin:0;color:var(--mut);font-size:.9rem}
+.tag{align-self:flex-start;font-size:.75rem;padding:2px 10px;border-radius:999px;border:1px solid var(--bd);color:var(--mut)}
+.tag.ok{border-color:var(--c1);color:var(--c1)}
+.vazio{padding:32px 16px;text-align:center;color:var(--mut);background:var(--card);border:1px dashed var(--bd);border-radius:12px}
+
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:16px}
+.scroll{overflow-x:auto}
+.scroll svg{min-width:600px;width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:.85rem;color:var(--mut)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bd)}
+th:first-child,td:first-child,th:last-child,td:last-child{text-align:left}
+th{color:var(--mut);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+tr.proj td{background:color-mix(in srgb,var(--c1) 8%,transparent)}
+td.tot{font-weight:700}
+.nota{font-size:.8rem;color:var(--mut);margin:8px 0 0}
+svg text{fill:var(--mut);font-family:inherit}
+svg text.tt{fill:var(--tx);font-weight:600}</style>
+</head>
+<body>
+<main>
+<nav id="menu"></nav>
+<h1>Projeção de Encargos</h1>
+<p class="sub">Média anual dos encargos setoriais, em R$/MWh: valores realizados e projeção.</p>
+<div class="card"><div class="scroll" id="grafico"></div>
+<div class="legend" id="leg"></div></div>
+<div class="card"><div class="scroll"><table id="tab"></table></div>
+<p class="nota">Valores em R$/MWh. 2019–2025: realizado. 2026–2030: projeção (linhas destacadas). Total = ESS + EER + ERCAP + Angra.</p></div>
+</main>
+<script src="menu.js"></script>
+<script>
+/* ===== DADOS: edite aqui ===== [ano, ESS, EER, ERCAP, Angra] (null = sem valor) */
+const ULT_REALIZADO=2025;
+const D=[[2019,1.44,2.14,null,null],[2020,6.42,4.62,null,null],[2021,45.84,3.49,null,null],[2022,10.12,14.43,null,null],[2023,2.26,20.53,null,null],[2024,2.92,18.84,0.15,null],[2025,0.33,19.29,1.91,null],[2026,0.09,18,7,10.3],[2027,0.07,15,13.2,10.67],[2028,0.1,14.99,20.98,10.53],[2029,0.08,15.2,42.9,10.25],[2030,0.07,15.15,50.15,10.57]];
+/* ============================= */
+const COMP=["ESS","EER","ERCAP","Angra"];
+const f=n=>n==null?"–":"R$ "+n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const rows=D.map(r=>{const v=r.slice(1);return{ano:r[0],v,tot:Math.round(v.reduce((a,b)=>a+(b||0),0)*100)/100,proj:r[0]>ULT_REALIZADO}});
+document.getElementById("tab").innerHTML="<thead><tr><th>Ano</th>"+COMP.map(c=>`<th>${c}</th>`).join("")+"<th>Total</th><th>Situação</th></tr></thead><tbody>"+
+  rows.map(r=>`<tr class="${r.proj?"proj":""}"><td>${r.ano}</td>${r.v.map(x=>`<td>${f(x)}</td>`).join("")}<td class="tot">${f(r.tot)}</td><td>${r.proj?"Projeção":"Realizado"}</td></tr>`).join("")+"</tbody>";
+document.getElementById("leg").innerHTML=COMP.map((c,i)=>`<span><i style="background:var(--s${i+1})"></i>${c}</span>`).join("")+"<span><i style=\"background:var(--mut);opacity:.5\"></i>Barras claras = projeção</span>";
+const W=760,H=360,L=54,R=10,T=34,B=36,pw=W-L-R,ph=H-T-B,band=pw/rows.length,bw=band*.62;
+const ymax=Math.ceil(Math.max(...rows.map(r=>r.tot))/20)*20,y=v=>T+ph-v/ymax*ph;
+const k=rows.findIndex(r=>r.proj),xk=L+k*band;
+let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Encargos realizados e projeção por ano"><text x="4" y="${T-14}" font-size="12">R$/MWh</text>`;
+if(k>=0)s+=`<rect x="${xk}" y="${T}" width="${W-R-xk}" height="${ph}" fill="var(--c1)" opacity=".07"/><line x1="${xk}" x2="${xk}" y1="${T-6}" y2="${T+ph}" stroke="var(--mut)" stroke-dasharray="4 3"/>`+
+  `<text x="${L+(xk-L)/2}" y="${T-14}" text-anchor="middle" font-size="12">Realizado</text><text x="${xk+(W-R-xk)/2}" y="${T-14}" text-anchor="middle" font-size="12">Projeção</text>`;
+for(let g=0;g<=ymax;g+=20)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--grid)"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end" font-size="11">${g}</text>`;
+rows.forEach((r,i)=>{
+  const x=L+i*band+(band-bw)/2;let acc=0;
+  s+=`<g><title>${r.ano}${r.proj?" (projeção)":""} – ${COMP.map((c,j)=>c+": "+f(r.v[j])).join(" | ")} | Total: ${f(r.tot)}</title>`;
+  r.v.forEach((v,j)=>{if(v>0){s+=`<rect x="${x}" y="${y(acc+v)}" width="${bw}" height="${y(acc)-y(acc+v)}" fill="var(--s${j+1})" stroke="var(--bd)" stroke-width=".8" opacity="${r.proj?.55:1}"/>`;acc+=v}});
+  s+=`<text class="tt" x="${x+bw/2}" y="${y(r.tot)-5}" text-anchor="middle" font-size="11">${r.tot.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})}</text><text x="${x+bw/2}" y="${H-14}" text-anchor="middle" font-size="11">${r.ano}</text></g>`;
+});
+document.getElementById("grafico").innerHTML=s+"</svg>";
+</script>
+
+</body>
+</html>
