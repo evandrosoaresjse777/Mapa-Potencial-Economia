@@ -1,10 +1,13 @@
 /* ===== MENU DO SITE: para criar uma página nova, adicione uma linha aqui ===== */
 const PAGINAS=[
   {arq:"index.html",nome:"Início"},
-  {arq:"potencial-economia.html",nome:"Potencial de Economia",desc:"Mapa do Brasil com o potencial de economia na migração para o mercado livre, por estado, distribuidora e ramo de atividade.",pronta:true},
-  {arq:"projecao-encargos.html",nome:"Projeção de Encargos",desc:"Encargos setoriais (ESS, EER, ERCAP e Angra): média anual realizada e projeção até 2030.",pronta:true},
-  {arq:"potencial-preco.html",nome:"Potencial de Preço",desc:"Comparativo de preços de energia no mercado livre.",pronta:false},
-  {arq:"noticias-setor.html",nome:"Notícias do Setor",desc:"Principais notícias e movimentos do setor de energia.",pronta:false}
+  {arq:"potencial-economia.html",nome:"Potencial de Economia",desc:"Mapa do Brasil com o potencial de economia na migração para o mercado livre, por estado, distribuidora e ramo de atuação.",pronta:true},
+  {arq:"noticias-setor.html",nome:"Notícias",desc:"Notícias relevantes para o setor de energia e o mercado livre.",pronta:false},
+  {arq:"prospeccao.html",nome:"Prospecção",desc:"Prospecção de clientes via base de dados, com consumidores do mercado livre (ACL) e do mercado regulado (ACR).",pronta:false},
+  {arq:"simulador.html",nome:"Simulador",desc:"Simulador de economia com leitura automática de fatura em PDF.",pronta:false},
+  {arq:"auditoria.html",nome:"Auditoria",desc:"Simulador de auditorias de energia.",pronta:false},
+  {arq:"projecao-encargos.html",nome:"Projeção de Encargos",desc:"Encargos históricos e projetados, com opção de incluir o consumo mensal e calcular o valor gasto.",pronta:true},
+  {arq:"projecao-pld.html",nome:"Projeção PLD",desc:"Acompanhamento do PLD realizado e das projeções.",pronta:false}
 ];
 (function(){
   const atual=location.pathname.split("/").pop()||"index.html";
