@@ -52,13 +52,19 @@ td.l,th.l{text-align:left}td.n{white-space:nowrap}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
 .stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .stat .lb{font-size:.8rem;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}.stat strong{font-size:1.7rem;line-height:1.2}.stat .sb{font-size:.85rem;color:var(--mut)}
-th:first-child,td:first-child{text-align:left}th:last-child,td:last-child{text-align:right}</style>
+th:first-child,td:first-child{text-align:left}th:last-child,td:last-child{text-align:right}.chip{font:inherit;font-size:.85rem;padding:6px 14px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--c1);border-color:var(--c1);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#08210f}}
+#vis{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 8px}
+td.f,th.f{position:sticky;left:0;background:var(--card);z-index:1;max-width:240px}
+tfoot td{font-weight:700;border-top:2px solid var(--bd);background:var(--card)}
+</style>
 </head>
 <body>
 <main>
 <nav id="menu"></nav>
 <h1>Prospecção Agentes ACL</h1>
-<p class="sub">Consulta aos agentes do mercado livre de energia. Dados públicos, último mês de referência de cada unidade.</p>
+<p class="sub">Consulta aos agentes do mercado livre de energia, com consumo e demanda mês a mês. Dados públicos.</p>
 <div class="card"><div class="filtros">
 <label>Buscar (empresa, unidade ou CNPJ)<input id="q" type="search" placeholder="Digite parte do nome ou CNPJ"></label>
 <label>Cidade<input id="cid" type="search" placeholder="Parte do nome da cidade"></label>
@@ -67,43 +73,55 @@ th:first-child,td:first-child{text-align:left}th:last-child,td:last-child{text-a
 <label>Ramo de atividade<select id="ramo"></select></label>
 <label>Submercado<select id="sub"></select></label>
 <label>Data de migração<div class="par"><input id="m1" type="date" title="De"><input id="m2" type="date" title="Até"></div></label>
-<label>Demanda (kW)<div class="par"><input id="d1" type="number" min="0" placeholder="mín."><input id="d2" type="number" min="0" placeholder="máx."></div></label>
-<label>Consumo (MWmédio)<div class="par"><input id="c1" type="number" min="0" step="any" placeholder="mín."><input id="c2" type="number" min="0" step="any" placeholder="máx."></div></label>
+<label>Demanda, último mês (kW)<div class="par"><input id="d1" type="number" min="0" placeholder="mín."><input id="d2" type="number" min="0" placeholder="máx."></div></label>
+<label>Consumo, último mês (MWmédio)<div class="par"><input id="c1" type="number" min="0" step="any" placeholder="mín."><input id="c2" type="number" min="0" step="any" placeholder="máx."></div></label>
 </div>
-<div class="barra"><div class="res" id="res">Carregando dados…</div><div style="display:flex;gap:8px"><button class="btn" id="limpar">Limpar filtros</button><button class="btn" id="csv">Baixar CSV</button></div></div>
-<div class="scroll"><table id="tab"><thead><tr id="cab"></tr></thead><tbody></tbody></table></div>
+<div class="barra"><div class="res" id="res">Carregando dados…</div><div style="display:flex;gap:8px"><button class="btn" id="limpar">Limpar filtros</button><button class="btn" id="xls">Baixar Excel</button></div></div>
+<div id="vis"></div>
+<div class="scroll"><table id="tab"><thead><tr id="cab"></tr></thead><tbody></tbody><tfoot id="foot"></tfoot></table></div>
 <div class="pg"><button class="btn" id="ant">‹ Anterior</button><span id="pag"></span><button class="btn" id="prox">Próxima ›</button></div>
 <p class="nota" id="msg"></p></div>
-<p class="nota">Cada linha é uma unidade consumidora (parcela de carga). O consumo e a demanda são os do último mês em que a unidade aparece na base. Consumo em MWmédio.</p>
+<p class="nota">Cada linha é uma unidade consumidora (parcela de carga). Em <b>Resumo</b>, consumo e demanda são os do último mês em que a unidade aparece na base. Em <b>Consumo mensal</b> e <b>Demanda mensal</b>, você vê todos os meses disponíveis. O Excel exportado traz as informações filtradas, com os dois históricos. Consumo em MWmédio.</p>
 </main>
 <script src="menu.js"></script>
+<script src="xlsx.mini.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-const COLS=[["Empresa",0,"l"],["Unidade",1,"l"],["CNPJ",2,"l"],["Cidade",3,"l"],["UF",4,"l"],["Ramo",5,"l"],["Distribuidora",8,"l"],["Migração",7,"l"],["Demanda (kW)",10,""],["Consumo (MWmédio)",9,""]];
-let M,R=[],H=[],F=[],ord=[9,-1],pag=0;const PP=50;
+const MN=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+let M,R=[],H=[],DG=[],F=[],ord={i:null,dir:-1},view="resumo",pag=0;const PP=50;
 const nz=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const nf=(n,d=0)=>n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
 const dt=s=>s?s.split("-").reverse().join("/"):"–";
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const lbl=m=>{const[a,b]=m.split("/");return MN[+a-1]+"/"+b.slice(2)};
+const nn=a=>a.filter(x=>x!=null);
+const avg=a=>{const v=nn(a);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
+const mx=a=>{const v=nn(a);return v.length?Math.max(...v):null};
+function cols(){
+  const e={t:"Empresa",g:r=>r[0],c:"l f"},u={t:"Unidade",g:r=>r[1],c:"l"},uf={t:"UF",g:r=>M.uf[r[4]],c:"l"};
+  if(view==="resumo")return[e,u,{t:"CNPJ",g:r=>r[2],c:"l n"},{t:"Cidade",g:r=>M.cid[r[3]],c:"l"},uf,{t:"Ramo",g:r=>M.ramo[r[5]],c:"l"},{t:"Distribuidora",g:r=>M.dist[r[8]],c:"l"},{t:"Migração",g:r=>r[7],f:dt,c:"l n"},{t:"Demanda (kW)",g:r=>r[10],f:v=>nf(v),num:1},{t:"Consumo (MWmédio)",g:r=>r[9],f:v=>nf(v,2),num:1}];
+  const c=view==="cons",k=c?12:13,f=c?v=>nf(v,2):v=>nf(v);
+  const ms=M.mes.map((m,i)=>({t:lbl(m),g:r=>r[k][i],f,num:1,m:1}));
+  const ag=c?{t:"Média",g:r=>avg(r[12]),f,num:1,tot:1}:{t:"Máxima",g:r=>mx(r[13]),f,num:1};
+  return[e,u,uf].concat(ms,[ag]);
+}
 fetch("dados-acl.json").then(r=>r.json()).then(j=>{M=j;R=j.rows;
-  H=R.map(r=>nz(r[0]+" "+r[1]+" "+r[2]));const D=R.map(r=>r[2].replace(/\D/g,""));R.forEach((r,i)=>r.push(D[i]));
-  M.cidN=M.cid.map(nz);
-  const fill=(id,arr,t)=>{$(id).innerHTML=`<option value="">${t}</option>`+arr.map((x,i)=>`<option value="${i}">${esc(x)}</option>`).join("")};
-  fill("uf",M.uf,"Todos");fill("dist",M.dist,"Todas");fill("ramo",M.ramo,"Todos");fill("sub",M.sub.filter(x=>x),"Todos");
-  $("sub").innerHTML='<option value="">Todos</option>'+M.sub.map((x,i)=>x?`<option value="${i}">${esc(x)}</option>`:"").join("");
-  $("cab").innerHTML=COLS.map((c,i)=>`<th class="o ${c[2]}" data-i="${i}">${c[0]}<span class="s"></span></th>`).join("");
-  $("cab").onclick=e=>{const th=e.target.closest("th");if(!th)return;const c=COLS[+th.dataset.i][1];ord=ord[0]===c?[c,-ord[1]]:[c,[9,10].includes(c)?-1:1];pag=0;sort();draw()};
+  H=R.map(r=>nz(r[0]+" "+r[1]+" "+r[2]));DG=R.map(r=>r[2].replace(/\D/g,""));M.cidN=M.cid.map(nz);
+  const fill=(id,arr,t)=>{$(id).innerHTML=`<option value="">${t}</option>`+arr.map((x,i)=>x?`<option value="${i}">${esc(x)}</option>`:"").join("")};
+  fill("uf",M.uf,"Todos");fill("dist",M.dist,"Todas");fill("ramo",M.ramo,"Todos");fill("sub",M.sub,"Todos");
+  $("cab").onclick=e=>{const th=e.target.closest("th");if(!th)return;const i=+th.dataset.i;ord=ord.i===i?{i,dir:-ord.dir}:{i,dir:cols()[i].num?-1:1};pag=0;sort();draw()};
   document.querySelectorAll(".filtros input,.filtros select").forEach(e=>e.addEventListener("input",()=>{clearTimeout(window.t);window.t=setTimeout(()=>{pag=0;filtra()},180)}));
   $("limpar").onclick=()=>{document.querySelectorAll(".filtros input").forEach(e=>e.value="");document.querySelectorAll(".filtros select").forEach(e=>e.value="");pag=0;filtra()};
-  $("ant").onclick=()=>{pag--;draw()};$("prox").onclick=()=>{pag++;draw()};$("csv").onclick=baixar;
-  filtra();
+  $("ant").onclick=()=>{pag--;draw()};$("prox").onclick=()=>{pag++;draw()};$("xls").onclick=excel;
+  vistas();filtra();
 }).catch(()=>{$("res").textContent="";$("msg").textContent="Não foi possível carregar os dados (arquivo dados-acl.json). Abra a página pelo link do site, e não direto do computador."});
+function vistas(){const b=$("vis");b.innerHTML="";[["resumo","Resumo"],["cons","Consumo mensal"],["dem","Demanda mensal"]].forEach(([k,t])=>{const x=document.createElement("button");x.className="chip";x.textContent=t;x.setAttribute("aria-pressed",view===k);x.onclick=()=>{view=k;ord={i:null,dir:-1};pag=0;vistas();filtra()};b.appendChild(x)})}
 function filtra(){
   const q=nz($("q").value.trim()),qd=q.replace(/\D/g,""),ci=nz($("cid").value.trim()),v=id=>$(id).value,
     uf=v("uf"),di=v("dist"),ra=v("ramo"),su=v("sub"),m1=v("m1"),m2=v("m2"),n=id=>v(id)===""?null:+v(id),d1=n("d1"),d2=n("d2"),c1=n("c1"),c2=n("c2");
   F=[];
   for(let i=0;i<R.length;i++){const r=R[i];
-    if(q&&!(H[i].includes(q)||(qd.length>=3&&r[12].includes(qd))))continue;
+    if(q&&!(H[i].includes(q)||(qd.length>=3&&DG[i].includes(qd))))continue;
     if(ci&&!M.cidN[r[3]].includes(ci))continue;
     if(uf!==""&&r[4]!==+uf)continue;if(di!==""&&r[8]!==+di)continue;if(ra!==""&&r[5]!==+ra)continue;if(su!==""&&r[6]!==+su)continue;
     if(m1&&(!r[7]||r[7]<m1))continue;if(m2&&(!r[7]||r[7]>m2))continue;
@@ -111,20 +129,33 @@ function filtra(){
     F.push(r)}
   sort();draw();
 }
-function val(r,c){return c===3?M.cid[r[3]]:c===4?M.uf[r[4]]:c===5?M.ramo[r[5]]:c===8?M.dist[r[8]]:r[c]}
-function sort(){const[c,s]=ord;F.sort((a,b)=>{const x=val(a,c),y=val(b,c);return(typeof x==="number"?x-y:String(x).localeCompare(String(y),"pt-BR"))*s})}
+function sort(){if(ord.i===null)return;const c=cols()[ord.i],s=ord.dir;F.sort((a,b)=>{let x=c.g(a),y=c.g(b);if(c.num){x=x==null?-Infinity:x;y=y==null?-Infinity:y;return x===y?0:(x-y)*s}return String(x??"").localeCompare(String(y??""),"pt-BR")*s})}
 function draw(){
-  const tot=F.length,np=Math.max(1,Math.ceil(tot/PP));pag=Math.min(Math.max(pag,0),np-1);
+  const cs=cols(),tot=F.length,np=Math.max(1,Math.ceil(tot/PP));pag=Math.min(Math.max(pag,0),np-1);
   const cnpjs=new Set(F.map(r=>r[2])).size,dem=F.reduce((a,r)=>a+r[10],0),con=F.reduce((a,r)=>a+r[9],0);
-  $("res").innerHTML=`<b>${nf(tot)}</b> unidades · <b>${nf(cnpjs)}</b> empresas (CNPJ) · demanda <b>${nf(dem)}</b> kW · consumo <b>${nf(con,1)}</b> MWmédio`;
-  $("tab").tBodies[0].innerHTML=F.slice(pag*PP,pag*PP+PP).map(r=>`<tr><td class="l">${esc(r[0])}</td><td class="l">${esc(r[1])}</td><td class="l n">${r[2]}</td><td class="l">${esc(M.cid[r[3]])}</td><td class="l">${M.uf[r[4]]}</td><td class="l">${esc(M.ramo[r[5]])}</td><td class="l">${esc(M.dist[r[8]])}</td><td class="l n">${dt(r[7])}</td><td>${nf(r[10])}</td><td>${nf(r[9],2)}</td></tr>`).join("")||`<tr><td colspan="10" class="l">Nenhum resultado para os filtros escolhidos.</td></tr>`;
-  document.querySelectorAll("#cab th").forEach((th,i)=>th.querySelector(".s").textContent=COLS[i][1]===ord[0]?(ord[1]>0?" ▲":" ▼"):"");
-  $("pag").textContent=`Página ${pag+1} de ${np}`;$("ant").disabled=pag===0;$("prox").disabled=pag>=np-1;
+  $("res").innerHTML=`<b>${nf(tot)}</b> unidades · <b>${nf(cnpjs)}</b> empresas (CNPJ) · demanda <b>${nf(dem)}</b> kW · consumo <b>${nf(con,1)}</b> MWmédio (último mês)`;
+  $("cab").innerHTML=cs.map((c,i)=>`<th class="o ${c.c||""}" data-i="${i}">${c.t}${ord.i===i?(ord.dir>0?" ▲":" ▼"):""}</th>`).join("");
+  $("tab").tBodies[0].innerHTML=F.slice(pag*PP,pag*PP+PP).map(r=>"<tr>"+cs.map(c=>{const v=c.g(r);return`<td class="${c.c||""}">${v==null||v===""?"–":c.f?c.f(v):esc(v)}</td>`}).join("")+"</tr>").join("")||`<tr><td colspan="${cs.length}" class="l">Nenhum resultado para os filtros escolhidos.</td></tr>`;
+  $("foot").innerHTML=view==="resumo"||!tot?"":"<tr><td class=\"l f\">Total do filtro</td><td></td><td></td>"+cs.slice(3).map(c=>`<td>${c.m||c.tot?c.f(F.reduce((s,r)=>s+(c.g(r)??0),0)):""}</td>`).join("")+"</tr>";
+  $("pag").textContent=`Página ${pag+1} de ${np}`;$("ant").disabled=pag===0;$("prox").disabled=pag>=np-1;$("xls").disabled=!tot;
 }
-function baixar(){
-  const q=s=>`"${String(s).replace(/"/g,'""')}"`;
-  const l=["Empresa;Unidade;CNPJ;Cidade;UF;Ramo;Submercado;Distribuidora;Migração;Demanda (kW);Consumo (MWmédio);Mês de referência"].concat(F.map(r=>[q(r[0]),q(r[1]),r[2],q(M.cid[r[3]]),M.uf[r[4]],q(M.ramo[r[5]]),M.sub[r[6]],q(M.dist[r[8]]),dt(r[7]),r[10],String(r[9]).replace(".",","),M.mes[r[11]]].join(";")));
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+l.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="agentes-acl.csv";a.click();
+function excel(){
+  if(!F.length)return;if(F.length>15000&&!confirm("Serão exportadas "+nf(F.length)+" unidades. O arquivo ficará pesado e pode demorar para gerar. Para um arquivo mais leve, aplique filtros antes. Deseja continuar?"))return;const b=$("xls");b.disabled=true;b.textContent="Gerando…";
+  setTimeout(()=>{try{
+    const ms=M.mes.map(lbl),nm=ms.length;
+    const head=["Empresa","Unidade","CNPJ","Cidade","UF","Ramo","Submercado","Distribuidora","Data de migração"].concat(ms.map(m=>"Consumo "+m+" (MWmédio)"),["Consumo médio (MWmédio)"],ms.map(m=>"Demanda "+m+" (kW)"),["Demanda máxima (kW)"]);
+    const aoa=[head];
+    for(const r of F)aoa.push([r[0],r[1],r[2],M.cid[r[3]],M.uf[r[4]],M.ramo[r[5]],M.sub[r[6]],M.dist[r[8]],r[7]?new Date(r[7]+"T12:00:00"):null].concat(r[12],[avg(r[12])],r[13],[mx(r[13])]));
+    const ws=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
+    ws["!cols"]=head.map((h,i)=>({wch:i===0?42:i===1?28:i===2?20:i<9?18:14}));
+    ws["!autofilter"]={ref:ws["!ref"]};
+    for(let r=1;r<aoa.length;r++)for(let c=8;c<head.length;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(!cell)continue;cell.z=c===8?"dd/mm/yyyy":c<=9+nm?"#,##0.000":"#,##0"}
+    const sel=id=>{const e=$(id);return e.value===""?"Todos":e.options[e.selectedIndex].text},v=id=>$(id).value||"–";
+    const info=[["Filtros aplicados",""],["Busca (empresa, unidade ou CNPJ)",v("q")],["Cidade",v("cid")],["Estado",sel("uf")],["Distribuidora",sel("dist")],["Ramo de atividade",sel("ramo")],["Submercado",sel("sub")],["Migração de",v("m1")],["Migração até",v("m2")],["Demanda mínima, último mês (kW)",v("d1")],["Demanda máxima, último mês (kW)",v("d2")],["Consumo mínimo, último mês (MWmédio)",v("c1")],["Consumo máximo, último mês (MWmédio)",v("c2")],["",""],["Unidades exportadas",F.length],["Meses incluídos",ms.join(", ")],["Exportado em",new Date().toLocaleString("pt-BR")]];
+    const wi=XLSX.utils.aoa_to_sheet(info);wi["!cols"]=[{wch:40},{wch:50}];
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Agentes ACL");XLSX.utils.book_append_sheet(wb,wi,"Filtros aplicados");
+    XLSX.writeFile(wb,"agentes-acl-filtrado.xlsx",{compression:true});
+  }catch(e){alert("Não foi possível gerar o Excel: "+e.message)}finally{b.textContent="Baixar Excel";b.disabled=!F.length}},30);
 }
 </script>
 </body>
