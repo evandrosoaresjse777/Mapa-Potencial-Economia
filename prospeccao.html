@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Prospecção – Painel do Mercado Livre de Energia</title>
+<title>Prospecção Agentes ACL – Painel do Mercado Livre de Energia</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5f6b7a;--bd:#d8dde3;--c1:#2e8b57}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--card:#1d232a;--tx:#e8ecf0;--mut:#9aa6b4;--bd:#323b45;--c1:#5fd392}}
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5f6b7a;--bd:#d8dde3;--c1:#2e8b57;--s1:#00243B;--s2:#00979C;--s3:#00DAAE;--s4:#104862;--grid:#e3e7ec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--card:#1d232a;--tx:#e8ecf0;--mut:#9aa6b4;--bd:#323b45;--c1:#5fd392;--s1:#00243B;--s2:#00979C;--s3:#00DAAE;--s4:#104862;--grid:#2c343d}}
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -21,16 +21,111 @@ a.item:hover{border-color:var(--c1)}
 .tag{align-self:flex-start;font-size:.75rem;padding:2px 10px;border-radius:999px;border:1px solid var(--bd);color:var(--mut)}
 .tag.ok{border-color:var(--c1);color:var(--c1)}
 .vazio{padding:32px 16px;text-align:center;color:var(--mut);background:var(--card);border:1px dashed var(--bd);border-radius:12px}
-</style>
+
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:16px}
+.scroll{overflow-x:auto}
+.scroll svg{min-width:600px;width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:.85rem;color:var(--mut)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bd)}
+
+th{color:var(--mut);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+tr.proj td{background:color-mix(in srgb,var(--c1) 8%,transparent)}
+td.tot{font-weight:700}
+.nota{font-size:.8rem;color:var(--mut);margin:8px 0 0}
+svg text{fill:var(--mut);font-family:inherit}
+svg text.tt{fill:var(--tx);font-weight:600}
+:root{--a1:#0b5d8f;--a2:#2e8b57}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--a1:#6cb8e8;--a2:#5fd392}}
+.filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.filtros label{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--mut)}
+.filtros input,.filtros select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);min-width:0}
+.par{display:flex;gap:6px}.par input{width:50%}
+.btn{font:inherit;font-size:.85rem;padding:7px 14px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--c1)}.btn:disabled{opacity:.4;cursor:default}
+.barra{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:12px 0}
+.res{font-size:.9rem;color:var(--mut)}.res b{color:var(--tx)}
+.pg{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px;font-size:.85rem;color:var(--mut)}
+th.o{cursor:pointer;user-select:none}th.o:hover{color:var(--tx)}
+td.l,th.l{text-align:left}td.n{white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat .lb{font-size:.8rem;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}.stat strong{font-size:1.7rem;line-height:1.2}.stat .sb{font-size:.85rem;color:var(--mut)}
+th:first-child,td:first-child{text-align:left}th:last-child,td:last-child{text-align:right}</style>
 </head>
 <body>
 <main>
 <nav id="menu"></nav>
-<h1>Prospecção</h1>
-<p class="sub">Página em construção.</p>
-<div class="vazio">O conteúdo desta página será publicado em breve.</div>
+<h1>Prospecção Agentes ACL</h1>
+<p class="sub">Consulta aos agentes do mercado livre de energia. Dados públicos, último mês de referência de cada unidade.</p>
+<div class="card"><div class="filtros">
+<label>Buscar (empresa, unidade ou CNPJ)<input id="q" type="search" placeholder="Digite parte do nome ou CNPJ"></label>
+<label>Cidade<input id="cid" type="search" placeholder="Parte do nome da cidade"></label>
+<label>Estado<select id="uf"></select></label>
+<label>Distribuidora<select id="dist"></select></label>
+<label>Ramo de atividade<select id="ramo"></select></label>
+<label>Submercado<select id="sub"></select></label>
+<label>Data de migração<div class="par"><input id="m1" type="date" title="De"><input id="m2" type="date" title="Até"></div></label>
+<label>Demanda (kW)<div class="par"><input id="d1" type="number" min="0" placeholder="mín."><input id="d2" type="number" min="0" placeholder="máx."></div></label>
+<label>Consumo (MWmédio)<div class="par"><input id="c1" type="number" min="0" step="any" placeholder="mín."><input id="c2" type="number" min="0" step="any" placeholder="máx."></div></label>
+</div>
+<div class="barra"><div class="res" id="res">Carregando dados…</div><div style="display:flex;gap:8px"><button class="btn" id="limpar">Limpar filtros</button><button class="btn" id="csv">Baixar CSV</button></div></div>
+<div class="scroll"><table id="tab"><thead><tr id="cab"></tr></thead><tbody></tbody></table></div>
+<div class="pg"><button class="btn" id="ant">‹ Anterior</button><span id="pag"></span><button class="btn" id="prox">Próxima ›</button></div>
+<p class="nota" id="msg"></p></div>
+<p class="nota">Cada linha é uma unidade consumidora (parcela de carga). O consumo e a demanda são os do último mês em que a unidade aparece na base. Consumo em MWmédio.</p>
 </main>
 <script src="menu.js"></script>
-
+<script>
+const $=id=>document.getElementById(id);
+const COLS=[["Empresa",0,"l"],["Unidade",1,"l"],["CNPJ",2,"l"],["Cidade",3,"l"],["UF",4,"l"],["Ramo",5,"l"],["Distribuidora",8,"l"],["Migração",7,"l"],["Demanda (kW)",10,""],["Consumo (MWmédio)",9,""]];
+let M,R=[],H=[],F=[],ord=[9,-1],pag=0;const PP=50;
+const nz=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const nf=(n,d=0)=>n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const dt=s=>s?s.split("-").reverse().join("/"):"–";
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+fetch("dados-acl.json").then(r=>r.json()).then(j=>{M=j;R=j.rows;
+  H=R.map(r=>nz(r[0]+" "+r[1]+" "+r[2]));const D=R.map(r=>r[2].replace(/\D/g,""));R.forEach((r,i)=>r.push(D[i]));
+  M.cidN=M.cid.map(nz);
+  const fill=(id,arr,t)=>{$(id).innerHTML=`<option value="">${t}</option>`+arr.map((x,i)=>`<option value="${i}">${esc(x)}</option>`).join("")};
+  fill("uf",M.uf,"Todos");fill("dist",M.dist,"Todas");fill("ramo",M.ramo,"Todos");fill("sub",M.sub.filter(x=>x),"Todos");
+  $("sub").innerHTML='<option value="">Todos</option>'+M.sub.map((x,i)=>x?`<option value="${i}">${esc(x)}</option>`:"").join("");
+  $("cab").innerHTML=COLS.map((c,i)=>`<th class="o ${c[2]}" data-i="${i}">${c[0]}<span class="s"></span></th>`).join("");
+  $("cab").onclick=e=>{const th=e.target.closest("th");if(!th)return;const c=COLS[+th.dataset.i][1];ord=ord[0]===c?[c,-ord[1]]:[c,[9,10].includes(c)?-1:1];pag=0;sort();draw()};
+  document.querySelectorAll(".filtros input,.filtros select").forEach(e=>e.addEventListener("input",()=>{clearTimeout(window.t);window.t=setTimeout(()=>{pag=0;filtra()},180)}));
+  $("limpar").onclick=()=>{document.querySelectorAll(".filtros input").forEach(e=>e.value="");document.querySelectorAll(".filtros select").forEach(e=>e.value="");pag=0;filtra()};
+  $("ant").onclick=()=>{pag--;draw()};$("prox").onclick=()=>{pag++;draw()};$("csv").onclick=baixar;
+  filtra();
+}).catch(()=>{$("res").textContent="";$("msg").textContent="Não foi possível carregar os dados (arquivo dados-acl.json). Abra a página pelo link do site, e não direto do computador."});
+function filtra(){
+  const q=nz($("q").value.trim()),qd=q.replace(/\D/g,""),ci=nz($("cid").value.trim()),v=id=>$(id).value,
+    uf=v("uf"),di=v("dist"),ra=v("ramo"),su=v("sub"),m1=v("m1"),m2=v("m2"),n=id=>v(id)===""?null:+v(id),d1=n("d1"),d2=n("d2"),c1=n("c1"),c2=n("c2");
+  F=[];
+  for(let i=0;i<R.length;i++){const r=R[i];
+    if(q&&!(H[i].includes(q)||(qd.length>=3&&r[12].includes(qd))))continue;
+    if(ci&&!M.cidN[r[3]].includes(ci))continue;
+    if(uf!==""&&r[4]!==+uf)continue;if(di!==""&&r[8]!==+di)continue;if(ra!==""&&r[5]!==+ra)continue;if(su!==""&&r[6]!==+su)continue;
+    if(m1&&(!r[7]||r[7]<m1))continue;if(m2&&(!r[7]||r[7]>m2))continue;
+    if(d1!==null&&r[10]<d1)continue;if(d2!==null&&r[10]>d2)continue;if(c1!==null&&r[9]<c1)continue;if(c2!==null&&r[9]>c2)continue;
+    F.push(r)}
+  sort();draw();
+}
+function val(r,c){return c===3?M.cid[r[3]]:c===4?M.uf[r[4]]:c===5?M.ramo[r[5]]:c===8?M.dist[r[8]]:r[c]}
+function sort(){const[c,s]=ord;F.sort((a,b)=>{const x=val(a,c),y=val(b,c);return(typeof x==="number"?x-y:String(x).localeCompare(String(y),"pt-BR"))*s})}
+function draw(){
+  const tot=F.length,np=Math.max(1,Math.ceil(tot/PP));pag=Math.min(Math.max(pag,0),np-1);
+  const cnpjs=new Set(F.map(r=>r[2])).size,dem=F.reduce((a,r)=>a+r[10],0),con=F.reduce((a,r)=>a+r[9],0);
+  $("res").innerHTML=`<b>${nf(tot)}</b> unidades · <b>${nf(cnpjs)}</b> empresas (CNPJ) · demanda <b>${nf(dem)}</b> kW · consumo <b>${nf(con,1)}</b> MWmédio`;
+  $("tab").tBodies[0].innerHTML=F.slice(pag*PP,pag*PP+PP).map(r=>`<tr><td class="l">${esc(r[0])}</td><td class="l">${esc(r[1])}</td><td class="l n">${r[2]}</td><td class="l">${esc(M.cid[r[3]])}</td><td class="l">${M.uf[r[4]]}</td><td class="l">${esc(M.ramo[r[5]])}</td><td class="l">${esc(M.dist[r[8]])}</td><td class="l n">${dt(r[7])}</td><td>${nf(r[10])}</td><td>${nf(r[9],2)}</td></tr>`).join("")||`<tr><td colspan="10" class="l">Nenhum resultado para os filtros escolhidos.</td></tr>`;
+  document.querySelectorAll("#cab th").forEach((th,i)=>th.querySelector(".s").textContent=COLS[i][1]===ord[0]?(ord[1]>0?" ▲":" ▼"):"");
+  $("pag").textContent=`Página ${pag+1} de ${np}`;$("ant").disabled=pag===0;$("prox").disabled=pag>=np-1;
+}
+function baixar(){
+  const q=s=>`"${String(s).replace(/"/g,'""')}"`;
+  const l=["Empresa;Unidade;CNPJ;Cidade;UF;Ramo;Submercado;Distribuidora;Migração;Demanda (kW);Consumo (MWmédio);Mês de referência"].concat(F.map(r=>[q(r[0]),q(r[1]),r[2],q(M.cid[r[3]]),M.uf[r[4]],q(M.ramo[r[5]]),M.sub[r[6]],q(M.dist[r[8]]),dt(r[7]),r[10],String(r[9]).replace(".",","),M.mes[r[11]]].join(";")));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+l.join("\n")],{type:"text/csv;charset=utf-8"}));a.download="agentes-acl.csv";a.click();
+}
+</script>
 </body>
 </html>
