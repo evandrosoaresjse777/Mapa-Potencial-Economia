@@ -52,7 +52,15 @@ td.l,th.l{text-align:left}td.n{white-space:nowrap}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
 .stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .stat .lb{font-size:.8rem;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}.stat strong{font-size:1.7rem;line-height:1.2}.stat .sb{font-size:.85rem;color:var(--mut)}
-th:first-child,td:first-child{text-align:left}th:last-child,td:last-child{text-align:right}.lin{cursor:pointer}.lin:hover td{background:color-mix(in srgb,var(--c1) 7%,var(--card))}
+th:first-child,td:first-child{text-align:left}th:last-child,td:last-child{text-align:right}.scroll.v{max-height:600px;overflow:auto}
+#tab th,#tab td{white-space:nowrap}
+#tab tbody tr.lin>td{overflow:hidden;text-overflow:ellipsis;max-width:260px}
+#tab thead th{position:sticky;top:0;z-index:3;background:var(--card)}
+#tab thead th.f{z-index:4}
+#tab thead small{font-weight:400;text-transform:none;letter-spacing:0}
+#tab tfoot td{position:sticky;bottom:0;z-index:2}
+#tab tfoot td.f{z-index:3}
+.lin{cursor:pointer}.lin:hover td{background:color-mix(in srgb,var(--c1) 7%,var(--card))}
 .det>td{background:var(--bg);text-align:left;padding:10px 12px}
 .dt{min-width:0;width:auto;margin-top:6px}.dt th,.dt td{text-align:right;padding:5px 9px;white-space:nowrap}.dt td:first-child,.dt th:first-child{text-align:left}
 .bar{display:flex;align-items:flex-end;height:36px;width:22px;margin-left:auto}.bar div{width:100%;background:var(--c1);border-radius:2px 2px 0 0}
@@ -82,11 +90,11 @@ tfoot td{font-weight:700;border-top:2px solid var(--bd);background:var(--card)}
 </div>
 <div class="barra"><div class="res" id="res">Carregando dados…</div><div style="display:flex;gap:8px"><button class="btn" id="limpar">Limpar filtros</button><button class="btn" id="xls">Baixar Excel</button></div></div>
 <div id="vis"></div>
-<p class="nota" style="margin:0 0 8px">Clique em uma linha da tabela para ver o consumo e a demanda de todos os meses, com a variação mês a mês.</p>
-<div class="scroll"><table id="tab"><thead><tr id="cab"></tr></thead><tbody></tbody><tfoot id="foot"></tfoot></table></div>
+<p class="nota" style="margin:0 0 8px">Clique em uma linha da tabela para ver o consumo (MWh) de todos os meses, com o menor e o maior consumo.</p>
+<div class="scroll v"><table id="tab"><thead><tr id="cab"></tr></thead><tbody></tbody><tfoot id="foot"></tfoot></table></div>
 <div class="pg"><button class="btn" id="ant">‹ Anterior</button><span id="pag"></span><button class="btn" id="prox">Próxima ›</button></div>
 <p class="nota" id="msg"></p></div>
-<p class="nota">Cada linha é uma unidade consumidora (parcela de carga). Em <b>Resumo</b>, consumo e demanda são os do último mês em que a unidade aparece na base. Em <b>Consumo mensal</b> e <b>Demanda mensal</b>, você vê todos os meses disponíveis. O Excel exportado traz as informações filtradas, com os dois históricos. Consumo em MWh.</p>
+<p class="nota">Cada linha é uma unidade consumidora (parcela de carga). Em <b>Resumo</b>, consumo e demanda são os do último mês em que a unidade aparece na base. Em <b>Consumo mensal</b> você vê o consumo (MWh) de todos os meses disponíveis. A demanda aparece apenas no <b>Resumo</b>. A variação é a diferença entre o menor e o maior consumo mensal da unidade, em % sobre o menor. O Excel exportado traz as informações filtradas, com consumo e demanda de todos os meses. Consumo em MWh.</p>
 </main>
 <script src="menu.js"></script>
 <script src="xlsx.mini.min.js"></script>
@@ -102,15 +110,16 @@ const lbl=m=>{const[a,b]=m.split("/");return MN[+a-1]+"/"+b.slice(2)};
 const nn=a=>a.filter(x=>x!=null);
 const avg=a=>{const v=nn(a);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
 const mx=a=>{const v=nn(a);return v.length?Math.max(...v):null};
-const varp=a=>{const v=nn(a);return v.length>1&&v[0]>0?(v[v.length-1]-v[0])/v[0]*100:null};
-const VAR={t:"Var. no período",g:r=>varp(r[12]),f:v=>(v>0?"+":"")+nf(v,1)+"%",num:1};
+const varp=a=>{const v=nn(a);if(v.length<2)return null;const lo=Math.min(...v),hi=Math.max(...v);return lo>0?(hi-lo)/lo*100:null};
+const ex=a=>{const v=nn(a);if(!v.length)return[null,null,null];const lo=Math.min(...v),hi=Math.max(...v);return[lo,hi,hi-lo]};
+const VAR={t:"Variação",u:"menor→maior",g:r=>varp(r[12]),f:v=>nf(v,1)+"%",num:1};
 function cols(){
   const e={t:"Empresa",g:r=>r[0],c:"l f"},u={t:"Unidade",g:r=>r[1],c:"l"},uf={t:"UF",g:r=>M.uf[r[4]],c:"l"};
   if(view==="resumo")return[e,u,{t:"CNPJ",g:r=>r[2],c:"l n"},{t:"Cidade",g:r=>M.cid[r[3]],c:"l"},uf,{t:"Ramo",g:r=>M.ramo[r[5]],c:"l"},{t:"Distribuidora",g:r=>M.dist[r[8]],c:"l"},{t:"Migração",g:r=>r[7],f:dt,c:"l n"},{t:"Demanda (kW)",g:r=>r[10],f:v=>nf(v),num:1},{t:"Consumo (MWh)",g:r=>r[9],f:v=>nf(v,2),num:1},VAR];
-  const c=view==="cons",k=c?12:13,f=c?v=>nf(v,2):v=>nf(v);
-  const ms=M.mes.map((m,i)=>({t:lbl(m),g:r=>r[k][i],f,num:1,m:1}));
-  const ag=c?{t:"Média",g:r=>avg(r[12]),f,num:1,tot:1}:{t:"Máxima",g:r=>mx(r[13]),f,num:1};
-  return[e,u,uf].concat(ms,c?[ag,VAR]:[ag]);
+  const f=v=>nf(v,2);
+  const ms=M.mes.map((m,i)=>({t:lbl(m),u:"MWh",g:r=>r[12][i],f,num:1,m:1}));
+  const ag={t:"Média",u:"MWh",g:r=>avg(r[12]),f,num:1,tot:1};
+  return[e,u,uf].concat(ms,[ag,VAR]);
 }
 fetch("dados-acl.json").then(r=>r.json()).then(j=>{M=j;R=j.rows;
   H=R.map(r=>nz(r[0]+" "+r[1]+" "+r[2]));DG=R.map(r=>r[2].replace(/\D/g,""));M.cidN=M.cid.map(nz);
@@ -125,15 +134,13 @@ fetch("dados-acl.json").then(r=>r.json()).then(j=>{M=j;R=j.rows;
 function abre(e){const tr=e.target.closest("tr.lin");if(!tr)return;const nx=tr.nextElementSibling;if(nx&&nx.classList.contains("det")){nx.remove();return}
   const d=document.createElement("tr");d.className="det";d.innerHTML=`<td colspan="${tr.children.length}">${detalhe(F[+tr.dataset.k])}</td>`;tr.after(d)}
 function detalhe(r){
-  const c=r[12],dm=r[13],mxv=Math.max(...nn(c),0)||1;
+  const c=r[12],v=nn(c),mxv=Math.max(...v,0)||1,lo=Math.min(...v),hi=Math.max(...v),il=c.indexOf(lo),ih=c.indexOf(hi),p=varp(c);
   const th=M.mes.map(m=>`<th>${lbl(m)}</th>`).join("");
-  const vr=c.map((v,i)=>{const p=c[i-1];if(i===0||v==null||p==null||p===0)return"<td>–</td>";const x=(v-p)/p*100;return`<td>${x>0?"▲":x<0?"▼":""} ${nf(Math.abs(x),1)}%</td>`}).join("");
   return`<strong>${esc(r[0])}</strong> · ${esc(r[1])}<div class="scroll"><table class="dt"><thead><tr><th></th>${th}</tr></thead><tbody>`+
-  `<tr><td>Consumo (MWh)</td>${c.map(v=>`<td>${v==null?"–":nf(v,2)}</td>`).join("")}</tr>`+
-  `<tr><td></td>${c.map(v=>`<td><div class="bar"><div style="height:${v==null?0:Math.max(2,v/mxv*34)}px"></div></div></td>`).join("")}</tr>`+
-  `<tr><td>Variação vs. mês anterior</td>${vr}</tr>`+
-  `<tr><td>Demanda (kW)</td>${dm.map(v=>`<td>${v==null?"–":nf(v)}</td>`).join("")}</tr></tbody></table></div>`}
-function vistas(){const b=$("vis");b.innerHTML="";[["resumo","Resumo"],["cons","Consumo mensal"],["dem","Demanda mensal"]].forEach(([k,t])=>{const x=document.createElement("button");x.className="chip";x.textContent=t;x.setAttribute("aria-pressed",view===k);x.onclick=()=>{view=k;ord={i:null,dir:-1};pag=0;vistas();filtra()};b.appendChild(x)})}
+  `<tr><td>Consumo (MWh)</td>${c.map((x,i)=>`<td${i===il||i===ih?' style="font-weight:700"':""}>${x==null?"–":nf(x,2)}</td>`).join("")}</tr>`+
+  `<tr><td></td>${c.map(x=>`<td><div class="bar"><div style="height:${x==null?0:Math.max(2,x/mxv*34)}px"></div></div></td>`).join("")}</tr></tbody></table></div>`+
+  `<p class="nota">Menor consumo: <b>${nf(lo,2)} MWh</b> (${lbl(M.mes[il])}) · Maior consumo: <b>${nf(hi,2)} MWh</b> (${lbl(M.mes[ih])}) · Diferença: <b>${nf(hi-lo,2)} MWh</b>${p==null?"":` (${nf(p,1)}% sobre o menor)`}</p>`}
+function vistas(){const b=$("vis");b.innerHTML="";[["resumo","Resumo"],["cons","Consumo mensal"]].forEach(([k,t])=>{const x=document.createElement("button");x.className="chip";x.textContent=t;x.setAttribute("aria-pressed",view===k);x.onclick=()=>{view=k;ord={i:null,dir:-1};pag=0;vistas();filtra()};b.appendChild(x)})}
 function filtra(){
   const q=nz($("q").value.trim()),qd=q.replace(/\D/g,""),ci=nz($("cid").value.trim()),v=id=>$(id).value,
     uf=v("uf"),di=v("dist"),ra=v("ramo"),su=v("sub"),m1=v("m1"),m2=v("m2"),n=id=>v(id)===""?null:+v(id),d1=n("d1"),d2=n("d2"),c1=n("c1"),c2=n("c2");
@@ -152,8 +159,8 @@ function draw(){
   const cs=cols(),tot=F.length,np=Math.max(1,Math.ceil(tot/PP));pag=Math.min(Math.max(pag,0),np-1);
   const cnpjs=new Set(F.map(r=>r[2])).size,dem=F.reduce((a,r)=>a+r[10],0),con=F.reduce((a,r)=>a+r[9],0);
   $("res").innerHTML=`<b>${nf(tot)}</b> unidades · <b>${nf(cnpjs)}</b> empresas (CNPJ) · demanda <b>${nf(dem)}</b> kW · consumo <b>${nf(con,1)}</b> MWh (último mês)`;
-  $("cab").innerHTML=cs.map((c,i)=>`<th class="o ${c.c||""}" data-i="${i}">${c.t}${ord.i===i?(ord.dir>0?" ▲":" ▼"):""}</th>`).join("");
-  $("tab").tBodies[0].innerHTML=F.slice(pag*PP,pag*PP+PP).map((r,k)=>'<tr class="lin" data-k="'+(pag*PP+k)+'">'+cs.map(c=>{const v=c.g(r);return`<td class="${c.c||""}">${v==null||v===""?"–":c.f?c.f(v):esc(v)}</td>`}).join("")+"</tr>").join("")||`<tr><td colspan="${cs.length}" class="l">Nenhum resultado para os filtros escolhidos.</td></tr>`;
+  $("cab").innerHTML=cs.map((c,i)=>`<th class="o ${c.c||""}" data-i="${i}">${c.t}${c.u?"<br><small>"+c.u+"</small>":""}${ord.i===i?(ord.dir>0?" ▲":" ▼"):""}</th>`).join("");
+  $("tab").tBodies[0].innerHTML=F.slice(pag*PP,pag*PP+PP).map((r,k)=>'<tr class="lin" data-k="'+(pag*PP+k)+'">'+cs.map(c=>{const v=c.g(r),x=v==null||v===""?"–":c.f?c.f(v):esc(v);return`<td class="${c.c||""}"${c.f||x==="–"?"":` title="${x}"`}>${x}</td>`}).join("")+"</tr>").join("")||`<tr><td colspan="${cs.length}" class="l">Nenhum resultado para os filtros escolhidos.</td></tr>`;
   $("foot").innerHTML=view==="resumo"||!tot?"":"<tr><td class=\"l f\">Total do filtro</td><td></td><td></td>"+cs.slice(3).map(c=>`<td>${c.m||c.tot?c.f(F.reduce((s,r)=>s+(c.g(r)??0),0)):""}</td>`).join("")+"</tr>";
   $("pag").textContent=`Página ${pag+1} de ${np}`;$("ant").disabled=pag===0;$("prox").disabled=pag>=np-1;$("xls").disabled=!tot;
 }
@@ -161,13 +168,13 @@ function excel(){
   if(!F.length)return;if(F.length>15000&&!confirm("Serão exportadas "+nf(F.length)+" unidades. O arquivo ficará pesado e pode demorar para gerar. Para um arquivo mais leve, aplique filtros antes. Deseja continuar?"))return;const b=$("xls");b.disabled=true;b.textContent="Gerando…";
   setTimeout(()=>{try{
     const ms=M.mes.map(lbl),nm=ms.length;
-    const head=["Empresa","Unidade","CNPJ","Cidade","UF","Ramo","Submercado","Distribuidora","Data de migração"].concat(ms.map(m=>"Consumo "+m+" (MWh)"),["Consumo médio mensal (MWh)","Variação no período (%)"],ms.map(m=>"Demanda "+m+" (kW)"),["Demanda máxima (kW)"]);
+    const head=["Empresa","Unidade","CNPJ","Cidade","UF","Ramo","Submercado","Distribuidora","Data de migração"].concat(ms.map(m=>"Consumo "+m+" (MWh)"),["Consumo médio mensal (MWh)","Menor consumo (MWh)","Maior consumo (MWh)","Diferença maior−menor (MWh)","Variação menor→maior (%)"],ms.map(m=>"Demanda "+m+" (kW)"),["Demanda máxima (kW)"]);
     const aoa=[head];
-    for(const r of F)aoa.push([r[0],r[1],r[2],M.cid[r[3]],M.uf[r[4]],M.ramo[r[5]],M.sub[r[6]],M.dist[r[8]],r[7]?new Date(r[7]+"T12:00:00"):null].concat(r[12],[avg(r[12]),varp(r[12])],r[13],[mx(r[13])]));
+    for(const r of F)aoa.push([r[0],r[1],r[2],M.cid[r[3]],M.uf[r[4]],M.ramo[r[5]],M.sub[r[6]],M.dist[r[8]],r[7]?new Date(r[7]+"T12:00:00"):null].concat(r[12],[avg(r[12])],ex(r[12]),[varp(r[12])],r[13],[mx(r[13])]));
     const ws=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
     ws["!cols"]=head.map((h,i)=>({wch:i===0?42:i===1?28:i===2?20:i<9?18:14}));
     ws["!autofilter"]={ref:ws["!ref"]};
-    for(let r=1;r<aoa.length;r++)for(let c=8;c<head.length;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(!cell)continue;cell.z=c===8?"dd/mm/yyyy":c<=9+nm?"#,##0.000":c===10+nm?"0.0":"#,##0"}
+    for(let r=1;r<aoa.length;r++)for(let c=8;c<head.length;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(!cell)continue;cell.z=c===8?"dd/mm/yyyy":c<=12+nm?"#,##0.000":c===13+nm?"0.0":"#,##0"}
     const sel=id=>{const e=$(id);return e.value===""?"Todos":e.options[e.selectedIndex].text},v=id=>$(id).value||"–";
     const info=[["Filtros aplicados",""],["Busca (empresa, unidade ou CNPJ)",v("q")],["Cidade",v("cid")],["Estado",sel("uf")],["Distribuidora",sel("dist")],["Ramo de atividade",sel("ramo")],["Submercado",sel("sub")],["Migração de",v("m1")],["Migração até",v("m2")],["Demanda mínima, último mês (kW)",v("d1")],["Demanda máxima, último mês (kW)",v("d2")],["Consumo mínimo, último mês (MWh)",v("c1")],["Consumo máximo, último mês (MWh)",v("c2")],["",""],["Unidades exportadas",F.length],["Meses incluídos",ms.join(", ")],["Exportado em",new Date().toLocaleString("pt-BR")]];
     const wi=XLSX.utils.aoa_to_sheet(info);wi["!cols"]=[{wch:40},{wch:50}];
