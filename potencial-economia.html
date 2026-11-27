@@ -25,7 +25,7 @@ p.sub{margin:0 0 16px;color:var(--mut);font-size:.95rem}
 .stat strong{font-size:1.9rem;line-height:1.2}
 .stat .sb{font-size:.85rem;color:var(--mut);min-height:1.2em}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;position:relative}
-svg{width:100%;height:auto;max-height:70vh;display:block}
+svg{width:100%;height:auto;max-height:78vh;display:block}
 svg path{stroke:var(--bg);stroke-width:.6;cursor:pointer;transition:opacity .15s}
 svg path:hover,svg path.on{stroke:var(--hov);stroke-width:1.6}
 .legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.85rem;color:var(--mut);flex-wrap:wrap}
@@ -40,19 +40,23 @@ svg path:hover,svg path.on{stroke:var(--hov);stroke-width:1.6}
 </head>
 <body>
 <main>
-<nav id="menu"></nav>
 <h1>Potencial de economia no Mercado Livre de Energia</h1>
 <p class="sub">Passe o mouse (ou toque) sobre um estado para ver a economia estimada por distribuidora.</p>
 <section class="filtro"><span class="lb">Ramo de atividade</span><div id="ramos"></div></section>
 <section class="filtro"><span class="lb">Tipo de distribuidora</span><div id="tipos"></div></section>
+<div class="layout">
+<div class="card">
+<svg id="map" viewBox="-1438 -107 811 784" role="img" aria-label="Mapa do Brasil por estado"></svg>
+<div class="legend"><span id="lmin">0%</span><div class="bar"></div><span id="lmax">0%</span><span class="sw" style="margin-left:12px"></span><span>sem dados</span></div>
+</div>
+<aside class="painel">
 <section class="stats">
 <div class="stat"><span class="lb">Média do Brasil</span><strong id="br">—</strong><span id="brs" class="sb"></span></div>
 <div class="stat"><span class="lb" id="estn">Estado selecionado</span><strong id="est">—</strong><span id="ests" class="sb"></span></div>
 <div class="stat"><span class="lb">Maior economia</span><strong id="top">—</strong><span id="tops" class="sb"></span></div>
 </section>
-<div class="card">
-<svg id="map" viewBox="-1438 -107 811 784" role="img" aria-label="Mapa do Brasil por estado"></svg>
-<div class="legend"><span id="lmin">0%</span><div class="bar"></div><span id="lmax">0%</span><span class="sw" style="margin-left:12px"></span><span>sem dados</span></div>
+<div class="card"><h2 id="dlistt" style="font-size:1rem;margin:0 0 8px">Distribuidoras</h2><div class="dlist" id="dlist"></div></div>
+</aside>
 </div>
 </main>
 <div id="tip"></div>
@@ -202,8 +206,15 @@ function render(){
   if(comDado.length){const m=comDado.reduce((a,b)=>b.economia>a.economia?b:a);$("top").textContent=fmt(m.economia);$("tops").textContent=`${m.nome} (${m.uf})`}else{$("top").textContent="—";$("tops").textContent=""}
   card(atual||fixo);
 }
+function listaPainel(uf){
+  const b=$("dlist");if(!b)return;
+  if(!uf){b.innerHTML='<p class="na">Passe o mouse ou clique em um estado para ver todas as distribuidoras.</p>';$("dlistt").textContent="Distribuidoras";return}
+  const l=lista(uf).sort((a,b)=>(b.economia??-1e9)-(a.economia??-1e9));
+  $("dlistt").textContent=`${NOMES[uf]}: ${l.length} distribuidoras`;
+  b.innerHTML=l.map(d=>`<div class="row"><span>${d.nome}</span><span class="v ${d.economia==null?"na":""}">${d.economia==null?"sem dado":fmt(d.economia)}</span></div>`).join("")||'<p class="na">Nenhuma distribuidora para o filtro escolhido.</p>';
+}
 function card(uf){
-  atual=uf;const el=$("est"),sub=$("ests"),m=uf?media(uf):null;
+  atual=uf;listaPainel(uf);const el=$("est"),sub=$("ests"),m=uf?media(uf):null;
   $("estn").textContent=uf?`Média ${NOMES[uf]}`:"Estado selecionado";
   if(!uf){el.textContent="—";sub.textContent="Passe o mouse ou clique em um estado";return}
   if(m==null){el.textContent="—";sub.textContent="Sem dados ainda";return}

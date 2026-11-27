@@ -25,18 +25,16 @@ a.item:hover{border-color:var(--c1)}
 </head>
 <body>
 <main>
-<nav id="menu"></nav>
 <h1>Painel do Mercado Livre de Energia</h1>
 <p class="sub">Escolha uma das análises abaixo.</p>
-<div class="grid" id="cards"></div>
+<div id="cards"></div>
 </main>
 <script src="menu.js"></script>
 <script>
-const g=document.getElementById("cards");
-PAGINAS.slice(1).forEach(p=>{
-  const a=document.createElement("a");a.className="item";a.href=p.arq;
-  a.innerHTML=`<span class="tag ${p.pronta?"ok":""}">${p.pronta?"Disponível":"Em breve"}</span><h2>${p.nome}</h2><p>${p.desc}</p>`;
-  g.appendChild(a);
+const c=document.getElementById("cards");
+GRUPOS.forEach(g=>{
+  const ps=PAGINAS.filter(p=>p.grupo===g);
+  c.insertAdjacentHTML("beforeend",`<h2 class="grupo-t">${g}</h2><div class="grid">`+ps.map(p=>`<a class="item" href="${p.arq}"><span class="tag ${p.pronta?"ok":""}">${p.pronta?"Disponível":"Em breve"}</span><h2>${p.nome}</h2><p>${p.desc}</p></a>`).join("")+"</div>");
 });
 </script>
 </body>
