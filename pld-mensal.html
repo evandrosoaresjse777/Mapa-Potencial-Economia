@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PLD Mensal Realizado – Painel do Mercado Livre de Energia</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5f6b7a;--bd:#d8dde3;--c1:#2e8b57}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--card:#1d232a;--tx:#e8ecf0;--mut:#9aa6b4;--bd:#323b45;--c1:#5fd392}}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:900px;margin:0 auto;padding:20px 16px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{margin:0 0 20px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.item{display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--card);border:1px solid var(--bd);border-radius:12px;color:var(--tx);text-decoration:none}
+a.item:hover{border-color:var(--c1)}
+.item h2{font-size:1.1rem;margin:0}
+.item p{margin:0;color:var(--mut);font-size:.9rem}
+.tag{align-self:flex-start;font-size:.75rem;padding:2px 10px;border-radius:999px;border:1px solid var(--bd);color:var(--mut)}
+.tag.ok{border-color:var(--c1);color:var(--c1)}
+.vazio{padding:32px 16px;text-align:center;color:var(--mut);background:var(--card);border:1px dashed var(--bd);border-radius:12px}
+
+:root{--p1:#00979C;--p2:#1f5fbf;--p3:#e08a00;--p4:#8e5bb5;--grid:#e3e7ec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--p1:#2cc4c9;--p2:#6cb0ff;--p3:#f0b84a;--p4:#c39be6;--grid:#2c343d}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:16px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.lb{font-size:.78rem;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:inherit;font-size:.85rem;padding:6px 13px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--c1);box-shadow:inset 0 0 0 1px var(--c1);font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.per{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+input[type=month],input[type=text],select{font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);min-width:0;width:130px}
+select{width:auto}
+.chk{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--tx);text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:600}
+.exib{margin:0 0 12px;color:var(--mut);font-size:.9rem}
+.stats7{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.stat .lb{margin:0}.stat strong{font-size:1.45rem;line-height:1.2}.stat .sb{font-size:.78rem;color:var(--mut);min-height:1.1em}
+.cw{position:relative}
+.cw svg{width:100%;height:auto;display:block;min-width:560px}
+.tip{position:absolute;pointer-events:none;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:.82rem;box-shadow:0 6px 20px rgba(0,0,0,.2);display:none;z-index:5;white-space:nowrap}
+.tip b{display:block;margin-bottom:3px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:6px;font-size:.82rem;color:var(--mut)}
+.scroll{overflow-x:auto}.scroll.v{max-height:430px;overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;background:var(--card)}
+.up{color:#d64545}.down{color:var(--c1)}
+.barra{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.btn{font:inherit;font-size:.85rem;padding:6px 14px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
+.btn:hover{border-color:var(--c1)}
+.nota{font-size:.8rem;color:var(--mut);margin:4px 0 0}
+svg text{fill:var(--mut);font-family:inherit}svg text.tt{fill:var(--tx);font-weight:600}</style>
+</head>
+<body>
+<main>
+<h1>PLD Mensal Realizado</h1>
+<p class="sub">Preço de Liquidação das Diferenças (R$/MWh) por submercado. Compare submercados e períodos. Fonte: CCEE.</p>
+<div class="card"><div class="ctl">
+<div><span class="lb">Submercados</span><div class="chips" id="subs"></div></div>
+<div><span class="lb">Período A</span><div class="per"><input id="a1" type="month"><span>até</span><input id="a2" type="month"></div><div class="chips" id="pres"></div></div>
+<div><span class="lb"><label class="chk"><input type="checkbox" id="comp"> Comparar com o período B</label></span><div class="per" id="perB"><input id="b1" type="month"><span>até</span><input id="b2" type="month"></div><div class="chips" id="presB"></div></div>
+</div></div>
+<p class="exib" id="exib"></p>
+<section class="stats7" id="cards"></section>
+<div class="duo2" id="graficos"></div>
+<div class="duo">
+<div class="card"><h2>PLD médio por submercado (R$/MWh)</h2><div class="scroll"><div class="cw" id="barras"></div></div><div class="legend" id="legb"></div></div>
+<div class="card"><div class="barra"><h2 style="margin:0">Resumo por submercado (R$/MWh)</h2><button class="btn" id="xls">Baixar Excel</button></div><div class="scroll"><table id="resumo"></table></div></div>
+</div>
+<div class="duo2" id="mensal"></div>
+<p class="nota" id="base"></p>
+</main>
+<script src="menu.js"></script>
+<script src="xlsx.mini.min.js"></script>
+<script>
+/* ===== DADOS: meses (aaaa-mm) e PLD em R$/MWh por submercado (fonte CCEE, planilha BD_PLD) ===== */
+const MESES=["2001-01","2001-02","2001-03","2001-04","2001-05","2001-06","2001-07","2001-08","2001-09","2001-10","2001-11","2001-12","2002-01","2002-02","2002-03","2002-04","2002-05","2002-06","2002-07","2002-08","2002-09","2002-10","2002-11","2002-12","2003-01","2003-02","2003-03","2003-04","2003-05","2003-06","2003-07","2003-08","2003-09","2003-10","2003-11","2003-12","2004-01","2004-02","2004-03","2004-04","2004-05","2004-06","2004-07","2004-08","2004-09","2004-10","2004-11","2004-12","2005-01","2005-02","2005-03","2005-04","2005-05","2005-06","2005-07","2005-08","2005-09","2005-10","2005-11","2005-12","2006-01","2006-02","2006-03","2006-04","2006-05","2006-06","2006-07","2006-08","2006-09","2006-10","2006-11","2006-12","2007-01","2007-02","2007-03","2007-04","2007-05","2007-06","2007-07","2007-08","2007-09","2007-10","2007-11","2007-12","2008-01","2008-02","2008-03","2008-04","2008-05","2008-06","2008-07","2008-08","2008-09","2008-10","2008-11","2008-12","2009-01","2009-02","2009-03","2009-04","2009-05","2009-06","2009-07","2009-08","2009-09","2009-10","2009-11","2009-12","2010-01","2010-02","2010-03","2010-04","2010-05","2010-06","2010-07","2010-08","2010-09","2010-10","2010-11","2010-12","2011-01","2011-02","2011-03","2011-04","2011-05","2011-06","2011-07","2011-08","2011-09","2011-10","2011-11","2011-12","2012-01","2012-02","2012-03","2012-04","2012-05","2012-06","2012-07","2012-08","2012-09","2012-10","2012-11","2012-12","2013-01","2013-02","2013-03","2013-04","2013-05","2013-06","2013-07","2013-08","2013-09","2013-10","2013-11","2013-12","2014-01","2014-02","2014-03","2014-04","2014-05","2014-06","2014-07","2014-08","2014-09","2014-10","2014-11","2014-12","2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10"];
+const PLD={
+  SUDESTE:[56.92,160.29,165.97,252.18,459.89,684.0,684.0,684.0,579.6,336.0,336.0,336.0,297.05,43.86,9.77,14.58,19.53,13.39,16.67,11.32,5.82,4.84,6.44,5.05,4.05,4.0,4.0,5.48,7.3,11.22,13.14,16.95,18.3,25.82,28.03,20.18,23.68,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.75,18.59,18.59,18.33,18.33,18.33,24.88,43.96,26.45,31.74,34.51,31.94,43.12,35.73,19.2,28.64,58.02,28.56,20.87,51.91,67.89,90.9,104.98,123.88,92.42,80.82,58.75,22.62,17.59,17.59,49.36,59.96,97.15,122.59,39.27,149.53,198.13,185.11,204.93,502.45,200.42,124.7,68.8,34.18,76.2,108.42,102.79,109.93,92.43,106.14,96.97,83.64,52.08,90.87,46.46,39.0,40.84,30.43,16.31,16.31,16.31,16.31,16.31,12.91,13.82,27.24,21.47,32.34,67.7,89.61,116.66,132.1,137.78,116.68,71.62,28.19,49.59,23.41,12.2,17.35,31.8,23.08,19.61,21.18,37.14,45.55,44.47,23.14,50.67,124.97,192.7,180.94,118.49,91.24,119.08,182.94,280.39,375.54,259.57,413.95,214.54,339.75,196.13,344.84,207.62,121.29,163.38,266.16,260.99,331.07,290.72,378.22,822.83,822.83,822.83,806.97,412.65,592.54,709.53,728.95,776.88,804.54,601.21,388.48,388.48,388.48,388.48,387.24,372.73,240.08,145.09,227.04,212.32,202.87,116.08,35.66,30.42,37.73,49.42,75.93,61.32,83.43,115.58,149.02,200.21,166.05,122.19,121.44,128.43,216.24,371.47,411.49,124.7,280.81,505.95,521.83,533.82,425.17,235.07,180.07,188.79,219.23,109.71,325.46,472.87,505.18,505.18,472.75,271.83,123.92,78.96,192.1,443.66,234.49,180.41,135.17,78.52,185.52,237.29,219.57,273.89,317.28,227.3,327.38,154.44,81.86,39.68,71.95,114.79,89.04,85.15,100.84,288.64,502.7,267.49,242.72,165.98,109.02,132.63,218.7,336.99,583.88,583.88,577.37,249.36,88.1,66.67,62.91,55.7,55.7,55.7,55.7,55.71,66.32,76.9,56.08,55.7,55.7,55.7,69.04,69.04,69.04,69.04,69.04,69.04,69.04,69.04,80.37,74.84,84.4,74.09,61.14,61.2,61.07,61.07,61.07,66.41,87.07,118.79,307.59,480.78,103.51,64.8,59.21,93.76,327.32,202.18,212.58,234.71,210.02,287.17,260.35,250.19,278.18,265.89,247.36,382.41,301.85,211.38,220.05,187.83,135.38,128.12,125.78,84.79],
+  SUL:[56.92,154.17,151.6,242.66,420.22,67.63,53.64,46.2,74.25,13.62,38.05,26.4,50.49,8.02,9.11,15.0,20.23,11.83,16.9,11.83,5.97,4.63,4.54,4.23,4.02,4.0,4.0,5.48,7.3,11.22,13.92,18.56,20.52,26.3,29.85,20.18,23.68,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.75,18.59,18.59,18.33,18.99,27.3,83.97,79.35,24.07,31.56,34.51,29.42,18.83,24.17,19.19,28.78,63.63,42.67,21.06,52.51,70.01,91.44,105.19,123.88,92.42,80.82,59.18,26.28,17.59,17.59,49.05,23.48,59.42,122.19,36.13,149.8,198.13,185.11,204.93,502.45,200.65,127.41,72.12,34.19,76.2,108.42,101.21,109.4,92.17,93.77,96.93,83.66,66.15,91.28,48.73,39.1,40.84,30.43,16.31,16.31,16.31,16.31,16.31,12.91,13.82,27.24,21.47,30.1,67.7,89.61,116.66,131.78,137.78,116.68,71.62,28.19,41.85,20.95,12.2,17.35,31.8,22.66,15.92,16.98,37.04,45.55,44.47,23.14,50.67,124.97,195.75,180.94,118.49,91.24,119.05,182.94,280.39,375.54,259.57,413.95,214.54,339.75,196.13,344.84,204.1,102.59,145.56,248.36,213.92,331.07,290.72,378.22,822.83,822.83,822.83,806.97,206.99,503.1,709.53,728.95,731.53,804.54,601.21,388.48,388.48,388.48,388.48,387.24,372.73,205.97,145.09,227.04,203.72,186.28,110.55,35.61,30.42,37.73,49.42,74.91,56.13,83.43,112.36,140.35,200.21,166.05,122.19,121.44,128.43,216.24,371.47,411.49,65.91,280.81,505.95,521.83,533.82,425.17,235.29,177.82,188.54,219.23,109.71,325.46,472.87,505.18,505.18,472.75,271.83,123.92,78.96,192.1,443.67,234.49,180.41,135.17,78.52,185.52,237.29,219.57,273.89,317.28,227.3,327.38,175.16,150.18,39.68,71.95,114.79,89.04,85.15,100.84,288.64,502.7,267.49,240.37,164.4,110.28,136.92,226.16,336.99,583.88,583.88,577.37,249.36,88.1,66.67,62.92,55.7,55.7,55.7,55.7,55.71,66.32,76.9,56.08,55.7,55.7,55.7,69.04,69.04,69.04,69.04,69.04,69.04,69.04,69.04,80.37,74.84,84.4,74.09,61.14,61.2,61.07,61.07,61.07,66.4,87.05,118.79,307.78,480.76,103.51,64.8,59.21,93.83,332.56,202.98,233.39,236.1,211.67,287.17,260.34,250.18,278.02,265.89,249.95,402.69,425.57,254.03,244.33,193.64,135.31,128.1,123.74,84.67],
+  NORDESTE:[33.87,121.47,154.21,247.35,440.99,684.0,684.0,684.0,647.45,562.15,562.15,562.15,515.17,319.41,5.79,6.97,4.12,7.73,16.45,12.87,5.35,4.65,6.0,5.2,4.33,4.0,4.0,5.48,6.34,10.53,9.87,13.37,15.44,19.88,24.7,49.41,294.09,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.33,18.33,18.33,18.33,18.33,18.33,18.33,18.5,18.4,18.86,19.79,18.4,19.14,37.62,36.1,16.92,19.79,23.44,30.61,51.94,68.56,46.25,24.4,17.58,17.59,17.59,17.59,28.07,53.37,97.19,118.94,45.81,149.11,197.45,185.11,204.93,497.61,214.37,123.24,71.92,34.42,75.34,108.42,102.79,109.91,92.43,106.14,96.97,77.77,27.41,84.25,27.79,30.17,30.0,25.55,16.31,16.31,16.31,16.31,16.31,12.91,15.91,30.38,24.62,33.99,69.4,97.56,123.56,189.37,232.48,115.05,68.69,28.96,50.39,24.91,12.2,17.24,31.75,23.13,19.62,21.18,37.14,45.55,37.37,12.92,12.57,109.12,182.68,180.37,118.65,91.24,119.08,183.3,294.82,375.54,253.24,409.76,212.59,339.84,197.38,344.94,207.94,121.61,164.69,269.1,270.23,331.07,291.86,379.35,755.9,756.37,744.28,772.21,412.6,592.54,709.53,728.95,776.88,804.54,601.21,388.48,388.48,388.48,388.48,387.24,372.73,243.74,145.09,227.04,218.92,274.9,303.22,310.38,166.28,249.11,266.71,106.07,118.6,108.68,119.47,149.02,200.21,166.05,122.19,139.25,164.66,284.01,372.41,418.2,143.59,280.81,505.95,521.83,533.82,425.18,234.2,178.01,178.54,218.14,108.64,211.57,441.96,505.18,505.18,472.75,271.83,123.92,71.13,84.76,164.24,154.15,42.35,50.95,78.52,177.49,211.33,218.52,273.89,317.28,227.3,327.22,149.8,66.92,39.68,39.68,68.83,85.56,68.28,77.37,182.12,242.52,265.01,239.02,162.68,78.02,88.55,189.32,328.76,583.88,583.88,570.39,248.97,88.08,66.46,57.22,55.7,55.7,55.7,55.7,55.71,66.3,76.9,56.08,55.7,55.7,55.7,69.04,69.04,69.04,69.04,69.04,69.04,69.04,69.04,80.37,74.84,84.4,74.09,61.14,61.2,61.07,61.07,61.07,66.4,84.28,103.82,243.3,449.83,102.14,64.8,59.18,58.6,58.96,107.28,124.98,230.9,205.55,268.67,245.86,218.37,275.04,265.87,238.87,380.14,250.39,139.28,166.69,184.42,135.03,125.27,125.15,84.61],
+  NORTE:[33.87,121.47,154.21,247.35,440.99,549.42,684.0,684.0,579.6,336.0,336.0,336.0,4.04,4.45,5.79,9.12,10.4,7.01,13.62,11.22,5.35,4.65,6.34,6.31,4.29,4.0,4.0,5.48,6.23,10.43,13.1,16.89,18.3,25.73,27.91,19.93,21.48,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.59,18.75,18.59,18.59,18.33,18.33,18.33,18.87,20.28,25.42,31.74,34.51,31.94,43.12,35.73,19.2,19.14,29.2,18.94,16.92,16.97,44.84,90.9,104.98,123.88,92.42,80.82,45.23,17.59,17.59,17.59,24.25,53.37,97.35,122.87,44.36,149.53,198.13,185.11,204.93,502.45,200.43,117.67,50.97,27.61,75.34,108.42,102.79,109.93,92.43,106.14,96.97,77.82,27.41,24.96,16.31,16.31,23.14,25.55,16.31,16.31,16.31,16.31,16.31,12.91,13.82,27.24,21.46,32.35,69.4,97.56,123.55,189.37,232.48,116.68,71.62,28.16,49.33,23.31,12.2,17.24,31.75,23.13,19.62,21.18,37.14,45.55,37.37,12.92,12.57,109.12,182.68,180.37,118.49,91.24,119.08,183.3,294.82,375.54,253.24,409.76,212.59,339.4,196.13,344.84,207.67,121.35,163.38,269.1,262.48,331.07,290.72,364.8,452.44,696.21,640.73,334.59,412.6,592.54,709.53,728.95,776.88,804.54,601.21,388.48,388.48,339.91,127.36,137.14,372.73,241.24,145.09,227.04,218.92,257.6,166.89,63.49,30.42,37.73,49.46,88.98,102.22,106.13,119.47,149.02,200.21,166.05,122.19,121.44,82.18,33.68,33.68,171.95,128.96,280.81,505.95,521.83,533.82,425.18,233.27,142.23,42.91,40.16,51.13,159.47,441.96,505.18,505.18,473.58,271.83,123.92,51.61,74.19,45.28,42.35,42.35,50.95,78.52,177.49,211.33,218.52,273.89,317.28,227.3,327.22,125.84,43.1,39.68,39.68,69.41,88.82,85.15,100.84,288.64,502.7,267.49,240.4,162.5,55.57,77.27,189.12,335.72,583.88,583.88,577.37,249.36,88.1,66.31,55.71,55.7,55.7,55.7,55.7,55.71,66.32,76.9,56.08,55.7,55.7,55.7,69.04,69.04,69.04,69.04,69.04,69.04,69.04,69.04,80.37,74.84,84.4,74.09,61.14,61.2,61.07,61.07,61.07,66.41,87.08,118.8,316.41,482.54,103.66,64.8,59.18,58.6,58.96,107.27,125.19,232.29,207.88,285.88,259.46,249.4,276.62,265.87,240.38,380.14,250.39,139.58,169.13,186.69,135.15,126.7,125.66,84.76]
+};
+/* ================================================================================== */
+const $=id=>document.getElementById(id);
+const SUBS=["SUDESTE","SUL","NORDESTE","NORTE"],NOME={SUDESTE:"Sudeste",SUL:"Sul",NORDESTE:"Nordeste",NORTE:"Norte"};
+const MN=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"],U=MESES.length-1;
+const nf=(n,d=2)=>n==null||isNaN(n)?"–":n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const lb=i=>{const[a,m]=MESES[i].split("-");return MN[+m-1]+"/"+a.slice(2)};
+const lbL=i=>{const[a,m]=MESES[i].split("-");return MN[+m-1]+"/"+a};
+const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+let sel=new Set(SUBS),comp=false,per={A:[U-11,U],B:[U-23,U-12]};
+const subsSel=()=>SUBS.filter(s=>sel.has(s)),fat=(s,p)=>PLD[s].slice(p[0],p[1]+1);
+function est(v){const n=v.length;if(!n)return null;const s=[...v].sort((a,b)=>a-b),me=v.reduce((a,b)=>a+b,0)/n;return{n,media:me,max:s[n-1],min:s[0],med:n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2,sd:n>1?Math.sqrt(v.reduce((a,b)=>a+(b-me)**2,0)/(n-1)):null,ult:v[n-1]}}
+function geral(p){const e=est(subsSel().flatMap(s=>fat(s,p)));if(!e)return null;const u=subsSel().map(s=>PLD[s][p[1]]);e.ult=u.reduce((a,b)=>a+b,0)/u.length;return e}
+const pct=(a,b)=>b?(a-b)/b*100:null;
+const sgn=v=>v==null?"":(v>0?"+":"")+nf(v,1)+"%";
+function parse(s){s=String(s||"").trim();let r,y,m;if(r=s.match(/^(\d{4})-(\d{1,2})/)){y=+r[1];m=+r[2]}else if(r=s.match(/^(\d{1,2})\/(\d{4})$/)){m=+r[1];y=+r[2]}else return null;const k=MESES.indexOf(y+"-"+String(m).padStart(2,"0"));return k<0?null:k}
+function lerPeriodo(a,b,atual){let i=parse($(a).value),j=parse($(b).value);if(i==null)i=atual[0];if(j==null)j=atual[1];return i<=j?[i,j]:[j,i]}
+function passo(m){return[5,10,20,25,50,100,200,250,500,1000].find(s=>m/s<=6)||1000}
+function linhas(box,p,ymax){
+  const n=p[1]-p[0]+1,W=760,H=320,L=48,R=14,T=16,B=30,pw=W-L-R,ph=H-T-B,x=k=>L+(n===1?pw/2:k*pw/(n-1)),y=v=>T+ph-v/ymax*ph,st=passo(ymax);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução do PLD"><text x="4" y="${T-4}" font-size="11">R$/MWh</text>`;
+  for(let g=0;g<=ymax;g+=st)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--grid)"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end" font-size="11">${nf(g,0)}</text>`;
+  let tk=[];if(n<=48){const sp=Math.ceil(n/12);for(let k=0;k<n;k+=sp)tk.push([k,lb(p[0]+k)])}else{const js=[];for(let k=0;k<n;k++)if(MESES[p[0]+k].endsWith("-01"))js.push(k);const sp=Math.ceil(js.length/10)||1;js.forEach((k,i)=>{if(i%sp===0)tk.push([k,MESES[p[0]+k].slice(0,4)])})}
+  tk.forEach(([k,t])=>s+=`<text x="${x(k)}" y="${H-10}" text-anchor="middle" font-size="11">${t}</text>`);
+  subsSel().forEach(sb=>{const i=SUBS.indexOf(sb)+1,v=fat(sb,p);
+    s+=`<polyline fill="none" stroke="var(--p${i})" stroke-width="2" stroke-linejoin="round" points="${v.map((a,k)=>x(k)+","+y(a)).join(" ")}"/>`;
+    if(n<=24)s+=v.map((a,k)=>`<circle cx="${x(k)}" cy="${y(a)}" r="2.8" fill="var(--p${i})"/>`).join("")});
+  s+=`<line class="cur" x1="0" x2="0" y1="${T}" y2="${T+ph}" stroke="var(--mut)" stroke-dasharray="4 3" style="display:none"/></svg><div class="tip"></div>`;
+  box.innerHTML=s;
+  const svg=box.querySelector("svg"),cur=svg.querySelector(".cur"),tip=box.querySelector(".tip");
+  box.onpointermove=e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W;let k=n===1?0:cl(Math.round((px-L)/(pw/(n-1))),0,n-1);
+    cur.setAttribute("x1",x(k));cur.setAttribute("x2",x(k));cur.style.display="";
+    tip.innerHTML=`<b>${lbL(p[0]+k)}</b>`+subsSel().map(sb=>`<div><span class="dot" style="background:var(--p${SUBS.indexOf(sb)+1})"></span> ${NOME[sb]}: <b style="display:inline">${nf(PLD[sb][p[0]+k])}</b></div>`).join("");
+    tip.style.display="block";const lx=x(k)/W*r.width,bw=box.getBoundingClientRect().width;tip.style.left=(lx+14+tip.offsetWidth>bw?lx-tip.offsetWidth-14:lx+14)+"px";tip.style.top="8px"};
+  box.onpointerleave=()=>{cur.style.display="none";tip.style.display="none"};
+}
+function barras(){
+  const ss=subsSel(),W=760,H=300,L=48,R=14,T=22,B=34,pw=W-L-R,ph=H-T-B,band=pw/ss.length,bw=Math.min(70,band*(comp?.32:.5));
+  const A=ss.map(s=>est(fat(s,per.A)).media),Bv=comp?ss.map(s=>est(fat(s,per.B)).media):[];
+  const ymax=Math.ceil(Math.max(...A,...Bv)/passo(Math.max(...A,...Bv)))*passo(Math.max(...A,...Bv)),y=v=>T+ph-v/ymax*ph,st=passo(ymax);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="PLD médio por submercado"><text x="4" y="${T-8}" font-size="11">R$/MWh</text>`;
+  for(let g=0;g<=ymax;g+=st)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--grid)"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end" font-size="11">${nf(g,0)}</text>`;
+  ss.forEach((sb,i)=>{const c=SUBS.indexOf(sb)+1,cx=L+i*band+band/2,bars=comp?[[A[i],cx-bw-1,1],[Bv[i],cx+1,.45]]:[[A[i],cx-bw/2,1]];
+    bars.forEach(([v,xx,o])=>s+=`<rect x="${xx}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" fill="var(--p${c})" opacity="${o}" rx="2"/><text class="tt" x="${xx+bw/2}" y="${y(v)-5}" text-anchor="middle" font-size="11">${nf(v)}</text>`);
+    s+=`<text x="${cx}" y="${H-12}" text-anchor="middle" font-size="12">${NOME[sb]}</text>`});
+  $("barras").innerHTML=s+"</svg>";
+  $("legb").innerHTML=comp?`<span>Barras cheias: período A (${lbL(per.A[0])} a ${lbL(per.A[1])})</span><span>Barras claras: período B (${lbL(per.B[0])} a ${lbL(per.B[1])})</span>`:`<span>Média do período A (${lbL(per.A[0])} a ${lbL(per.A[1])})</span>`;
+}
+function tabelaResumo(){
+  const ss=subsSel(),M=[["Média","media"],["Máximo","max"],["Mínimo","min"],["Mediana","med"]],lin=[...ss.map(s=>[NOME[s],s])];if(ss.length>1)lin.push(["Média dos selecionados",null]);
+  const g=(s,p)=>s?est(fat(s,p)):geral(p);let h;
+  if(!comp){h="<thead><tr><th>Submercado</th>"+M.concat([["Desvio padrão","sd"],["Último PLD","ult"],["Registros","n"]]).map(m=>`<th>${m[0]}</th>`).join("")+"</tr></thead><tbody>"+
+    lin.map(([t,s])=>{const e=s?est(fat(s,per.A)):geral(per.A);return`<tr><td>${t}</td>${["media","max","min","med","sd","ult"].map(k=>`<td>${nf(e[k])}</td>`).join("")}<td>${e.n}</td></tr>`}).join("")}
+  else{h="<thead><tr><th>Submercado</th>"+M.map(m=>`<th>${m[0]} A</th><th>${m[0]} B</th><th>Var.</th>`).join("")+"</tr></thead><tbody>"+
+    lin.map(([t,s])=>{const a=g(s,per.A),b=g(s,per.B);return`<tr><td>${t}</td>${M.map(m=>{const v=pct(a[m[1]],b[m[1]]);return`<td>${nf(a[m[1]])}</td><td>${nf(b[m[1]])}</td><td class="${v>0?"up":v<0?"down":""}">${sgn(v)}</td>`}).join("")}</tr>`}).join("")}
+  $("resumo").innerHTML=h+"</tbody>";
+}
+function tabelaMensal(p,tit){
+  const ss=subsSel(),cab="<thead><tr><th>Mês</th>"+ss.map(s=>`<th>${NOME[s]}</th>`).join("")+(ss.length>1?"<th>Média</th>":"")+"</tr></thead>";
+  let rs="";for(let i=p[0];i<=p[1];i++){const v=ss.map(s=>PLD[s][i]);rs+=`<tr><td>${lbL(i)}</td>${v.map(a=>`<td>${nf(a)}</td>`).join("")}${ss.length>1?`<td>${nf(v.reduce((a,b)=>a+b,0)/v.length)}</td>`:""}</tr>`}
+  return`<div class="card"><h2>${tit}: PLD mensal (R$/MWh)</h2><div class="scroll v"><table>${cab}<tbody>${rs}</tbody></table></div></div>`;
+}
+function render(){
+  per.A=lerPeriodo("a1","a2",per.A);if(comp)per.B=lerPeriodo("b1","b2",per.B);
+  $("a1").value=MESES[per.A[0]];$("a2").value=MESES[per.A[1]];$("b1").value=MESES[per.B[0]];$("b2").value=MESES[per.B[1]];
+  $("perB").style.opacity=comp?1:.45;["b1","b2"].forEach(i=>$(i).disabled=!comp);
+  document.querySelectorAll("#presB .chip,#presB select").forEach(e=>e.disabled=!comp);
+  $("subs").querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",sel.has(b.dataset.s)));
+  const ss=subsSel();
+  $("exib").textContent=`Exibindo: ${ss.map(s=>NOME[s]).join(", ")} • ${lbL(per.A[0])} a ${lbL(per.A[1])}`+(comp?`  |  comparando com ${lbL(per.B[0])} a ${lbL(per.B[1])}`:"");
+  const a=geral(per.A),b=comp?geral(per.B):null,defs=[["PLD médio","media"],["PLD máximo","max"],["PLD mínimo","min"],["Mediana","med"],["Desvio padrão","sd"],["Último PLD","ult"],["Registros","n"]];
+  $("cards").innerHTML=defs.map(([t,k])=>{const d=k==="n"?0:2;let sb=comp?`B: ${nf(b[k],d)}`+(k!=="n"?` · A vs B: ${sgn(pct(a[k],b[k]))}`:""):(k==="n"?"meses × submercados":"R$/MWh");return`<div class="stat"><span class="lb">${t}</span><strong>${nf(a[k],d)}</strong><span class="sb">${sb}</span></div>`}).join("");
+  const ymax=(()=>{const m=Math.max(...ss.flatMap(s=>fat(s,per.A)),...(comp?ss.flatMap(s=>fat(s,per.B)):[0]));return Math.ceil(m/passo(m))*passo(m)})();
+  const gr=$("graficos");gr.innerHTML=`<div class="card"><h2>Evolução do PLD – período A (${lbL(per.A[0])} a ${lbL(per.A[1])})</h2><div class="scroll"><div class="cw" id="gA"></div></div><div class="legend">${ss.map(s=>`<span><i class="dot" style="background:var(--p${SUBS.indexOf(s)+1})"></i> ${NOME[s]}</span>`).join("")}</div></div>`+
+    (comp?`<div class="card"><h2>Evolução do PLD – período B (${lbL(per.B[0])} a ${lbL(per.B[1])})</h2><div class="scroll"><div class="cw" id="gB"></div></div><div class="legend"><span>Mesma escala do período A, para comparação direta</span></div></div>`:"");
+  linhas($("gA"),per.A,ymax);if(comp)linhas($("gB"),per.B,ymax);
+  barras();tabelaResumo();
+  $("mensal").innerHTML=tabelaMensal(per.A,"Período A")+(comp?tabelaMensal(per.B,"Período B"):"");
+}
+function excel(){
+  const ss=subsSel(),wb=XLSX.utils.book_new(),ps=[["A",per.A]].concat(comp?[["B",per.B]]:[]);
+  const rs=[["Submercado","Período","Média (R$/MWh)","Máximo","Mínimo","Mediana","Desvio padrão","Último PLD","Registros"]];
+  ps.forEach(([n,p])=>ss.forEach(s=>{const e=est(fat(s,p));rs.push([NOME[s],`${n}: ${lbL(p[0])} a ${lbL(p[1])}`,e.media,e.max,e.min,e.med,e.sd,e.ult,e.n])}));
+  const w1=XLSX.utils.aoa_to_sheet(rs);w1["!cols"]=[{wch:14},{wch:26},{wch:16},{wch:11},{wch:11},{wch:11},{wch:14},{wch:12},{wch:10}];XLSX.utils.book_append_sheet(wb,w1,"Resumo");
+  ps.forEach(([n,p])=>{const a=[["Mês"].concat(ss.map(s=>NOME[s]+" (R$/MWh)"))];for(let i=p[0];i<=p[1];i++){const[y,m]=MESES[i].split("-");a.push([new Date(+y,+m-1,1,12)].concat(ss.map(s=>PLD[s][i])))}
+    const w=XLSX.utils.aoa_to_sheet(a,{cellDates:true});for(let r=1;r<a.length;r++){const c=w[XLSX.utils.encode_cell({r,c:0})];if(c)c.z="mm/yyyy"}w["!cols"]=[{wch:10}].concat(ss.map(()=>({wch:18})));XLSX.utils.book_append_sheet(wb,w,"PLD mensal "+n)});
+  XLSX.writeFile(wb,"pld-mensal.xlsx",{compression:true});
+}
+/* ===== controles ===== */
+const chip=(box,t,fn,extra)=>{const b=document.createElement("button");b.className="chip";b.innerHTML=t;b.onclick=fn;if(extra)Object.assign(b.dataset,extra);box.appendChild(b);return b};
+SUBS.forEach((s,i)=>chip($("subs"),`<i class="dot" style="background:var(--p${i+1})"></i>${NOME[s]}`,()=>{sel.has(s)?(sel.size>1&&sel.delete(s)):sel.add(s);render()},{s}));
+[["12 meses",()=>[U-11,U]],["24 meses",()=>[U-23,U]],["5 anos",()=>[U-59,U]],["Todo o histórico",()=>[0,U]]].forEach(([t,f])=>chip($("pres"),t,()=>{per.A=f();render()}));
+const anos=[...new Set(MESES.map(m=>m.slice(0,4)))].reverse(),sa=document.createElement("select");
+sa.innerHTML='<option value="">Ano…</option>'+anos.map(a=>`<option>${a}</option>`).join("");
+sa.onchange=()=>{if(!sa.value)return;const ix=MESES.map((m,i)=>m.startsWith(sa.value)?i:-1).filter(i=>i>=0);per.A=[ix[0],ix[ix.length-1]];sa.value="";render()};
+$("pres").appendChild(sa);
+const desloca=d=>{const[a,b]=per.A;return[cl(a+d,0,U),cl(b+d,0,U)]};
+chip($("presB"),"Ano anterior",()=>{per.B=desloca(-12);render()});
+chip($("presB"),"Período anterior",()=>{per.B=desloca(-(per.A[1]-per.A[0]+1));render()});
+["a1","a2","b1","b2"].forEach(i=>$(i).addEventListener("change",render));
+$("comp").onchange=e=>{comp=e.target.checked;render()};
+$("xls").onclick=excel;
+$("base").textContent=`Base disponível: ${lbL(0)} a ${lbL(U)}. Fonte: CCEE. Desvio padrão amostral. Com mais de um submercado, os cartões consideram todas as observações selecionadas (o último PLD é a média dos submercados no último mês).`;
+render();
+</script>
+</body>
+</html>
