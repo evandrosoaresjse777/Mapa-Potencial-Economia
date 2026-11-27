@@ -15,7 +15,7 @@ h1{font-size:1.4rem;margin:0 0 4px}
 p.sub{margin:0 0 16px;color:var(--mut);font-size:.95rem}
 .filtro{margin-bottom:12px}
 .filtro .lb{font-size:.8rem;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px}
-#ramos{display:flex;flex-wrap:wrap;gap:6px}
+#ramos,#tipos{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--c1);border-color:var(--c1);color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#08210f}}
@@ -44,6 +44,7 @@ svg path:hover,svg path.on{stroke:var(--hov);stroke-width:1.6}
 <h1>Potencial de economia no Mercado Livre de Energia</h1>
 <p class="sub">Passe o mouse (ou toque) sobre um estado para ver a economia estimada por distribuidora.</p>
 <section class="filtro"><span class="lb">Ramo de atividade</span><div id="ramos"></div></section>
+<section class="filtro"><span class="lb">Tipo de distribuidora</span><div id="tipos"></div></section>
 <section class="stats">
 <div class="stat"><span class="lb">Média do Brasil</span><strong id="br">—</strong><span id="brs" class="sb"></span></div>
 <div class="stat"><span class="lb" id="estn">Estado selecionado</span><strong id="est">—</strong><span id="ests" class="sb"></span></div>
@@ -65,25 +66,126 @@ const NOMES={"AC": "Acre", "AL": "Alagoas", "AP": "Amapá", "AM": "Amazonas", "B
    Plástico, Posto de combustível, Logística, Shopping, Hotel.
    Use null onde não houver valor. eco:[] = ainda sem dados. */
 const RAMOS=["Têxtil","Metalúrgico","Supermercado","Alimentos congelados","Pescados","Plástico","Posto de combustível","Logística","Shopping","Hotel"];
-const DADOS={
-  SC:[{nome:"Celesc",eco:[]}],
-  SP:[{nome:"EDP SP",eco:[5,7,6,5,4,6,8,7,6,6]},{nome:"CPFL Piratininga",eco:[3,5,4,3,3,4,5,5,4,4]},{nome:"Elektro",eco:[6,8,7,6,5,7,9,8,7,7]}],
-  RJ:[{nome:"Light",eco:[]},{nome:"Enel RJ",eco:[]}],
-  MG:[{nome:"Cemig",eco:[]}],
-  PR:[{nome:"Copel",eco:[]}],
-  RS:[{nome:"RGE Sul",eco:[]},{nome:"CEEE Equatorial",eco:[]}]
-};
+/* ufs = estados atendidos (fonte: base de áreas de atuação da ANEEL). Dados: planilha BD_Simulador_Calculadora (aba BD_Site). */
+const DIST=[
+  {nome:"AMAZONAS ENERGIA",tipo:"Concessionária",ufs:["AM"],eco:[null,null,null,null,null,null,null,null,null,null]},
+  {nome:"CASTRO",tipo:"Permissionária",ufs:["PR"],eco:[0.83,-0.22,0.43,1.73,1.14,3.48,-1.81,3.33,2.44,-0.64]},
+  {nome:"CEDRAP",tipo:"Permissionária",ufs:["SP"],eco:[-4.41,-5.47,-5.0,-4.17,-4.19,-3.15,-6.05,-3.54,-2.68,-5.01]},
+  {nome:"CEDRI",tipo:"Permissionária",ufs:["SP"],eco:[5.83,5.15,5.77,7.06,6.1,9.04,3.27,9.27,6.47,4.13]},
+  {nome:"CEGERO",tipo:"Permissionária",ufs:["SC"],eco:[-10.03,-11.28,-11.09,-9.69,-9.79,-8.23,-12.55,-8.72,-7.66,-11.15]},
+  {nome:"CEJAMA",tipo:"Permissionária",ufs:["SC"],eco:[-11.93,-13.01,-13.12,-12.46,-11.83,-12.09,-12.89,-12.89,-9.61,-11.87]},
+  {nome:"CELESC",tipo:"Concessionária",ufs:["SC"],eco:[7.28,5.38,7.46,8.32,7.91,9.86,4.23,9.52,10.02,6.13]},
+  {nome:"CELETRO",tipo:"Permissionária",ufs:["RS"],eco:[3.78,2.9,3.71,4.85,4.1,6.62,1.36,6.67,4.9,2.32]},
+  {nome:"CEMIG",tipo:"Concessionária",ufs:["MG"],eco:[2.01,0.34,1.98,2.73,2.51,4.0,-0.45,3.63,4.44,1.18]},
+  {nome:"CEMIRIM",tipo:"Permissionária",ufs:["SP"],eco:[-9.76,-10.54,-11.16,-9.7,-9.72,-8.42,-11.72,-8.88,-7.92,-10.78]},
+  {nome:"CEPRAG",tipo:"Permissionária",ufs:["SC"],eco:[-10.57,-11.67,-11.62,-11.03,-10.44,-10.66,-11.52,-11.43,-8.32,-10.51]},
+  {nome:"CERAÇA",tipo:"Permissionária",ufs:["SC"],eco:[-1.31,-2.43,-1.81,-0.56,-1.01,1.04,-3.9,0.83,0.4,-2.64]},
+  {nome:"CERAL ANITÁPOLIS",tipo:"Permissionária",ufs:["SC"],eco:[-9.07,-9.98,-10.06,-9.62,-9.0,-9.46,-9.7,-10.2,-7.14,-8.89]},
+  {nome:"CERAL ARARUAMA",tipo:"Permissionária",ufs:["RJ"],eco:[-14.15,-14.63,-15.92,-15.97,-14.39,-17.25,-13.27,-18.53,-12.24,-12.91]},
+  {nome:"CERAL",tipo:"Permissionária",ufs:["SC"],eco:[-17.16,-17.7,-19.35,-18.84,-17.43,-19.48,-16.84,-20.67,-15.01,-16.32]},
+  {nome:"CERBRANORTE",tipo:"Permissionária",ufs:["SC"],eco:[-13.19,-14.55,-14.28,-13.22,-12.97,-12.2,-15.15,-12.86,-10.58,-13.75]},
+  {nome:"CERCI",tipo:"Permissionária",ufs:["RJ"],eco:[5.81,5.16,6.06,7.1,6.13,8.97,3.6,9.26,6.37,4.33]},
+  {nome:"CERCOS",tipo:"Permissionária",ufs:["SE"],eco:[0.21,-0.66,-0.15,0.92,0.45,2.44,-1.86,2.34,1.46,-0.92]},
+  {nome:"CEREJ",tipo:"Permissionária",ufs:["SC"],eco:[0.07,-0.74,-0.26,0.72,0.3,2.07,-1.86,1.97,1.23,-0.96]},
+  {nome:"CERES",tipo:"Permissionária",ufs:["RJ"],eco:[7.56,6.91,8.0,9.1,7.92,11.21,5.14,11.65,7.98,5.88]},
+  {nome:"CERFOX",tipo:"Permissionária",ufs:["RS"],eco:[-10.55,-11.45,-11.83,-10.92,-10.5,-10.28,-11.73,-10.94,-8.52,-10.81]},
+  {nome:"CERGAL",tipo:"Permissionária",ufs:["SC"],eco:[-4.84,-5.92,-5.5,-4.54,-4.62,-3.4,-6.7,-3.78,-3.03,-5.59]},
+  {nome:"CERGAPA",tipo:"Permissionária",ufs:["SC"],eco:[-8.17,-9.49,-9.12,-7.54,-7.88,-5.79,-11.25,-6.19,-5.83,-9.72]},
+  {nome:"CERGRAL",tipo:"Permissionária",ufs:["SC"],eco:[-13.03,-14.51,-14.13,-12.39,-12.72,-10.53,-16.46,-11.0,-10.36,-14.71]},
+  {nome:"CERILUZ",tipo:"Permissionária",ufs:["RS"],eco:[-10.04,-11.04,-11.27,-10.04,-9.92,-8.91,-11.89,-9.46,-7.92,-10.79]},
+  {nome:"CERIM",tipo:"Permissionária",ufs:["SP"],eco:[-6.29,-7.5,-7.06,-6.01,-6.04,-4.79,-8.33,-5.24,-4.2,-7.08]},
+  {nome:"CERIPA",tipo:"Permissionária",ufs:["SP"],eco:[-16.41,-17.21,-18.16,-17.76,-16.52,-18.21,-16.37,-19.31,-14.07,-15.65]},
+  {nome:"CERIS",tipo:"Permissionária",ufs:["SP"],eco:[8.02,7.03,8.01,9.43,8.4,11.57,4.87,11.69,9.13,6.04]},
+  {nome:"CERMC",tipo:"Permissionária",ufs:["SP"],eco:[6.06,5.1,5.75,7.29,6.37,9.38,2.88,9.44,7.21,4.09]},
+  {nome:"CERMISSÕES",tipo:"Permissionária",ufs:["RS"],eco:[-3.31,-4.34,-3.92,-2.81,-3.07,-1.45,-5.46,-1.74,-1.6,-4.34]},
+  {nome:"CERMOFUL",tipo:"Permissionária",ufs:["SC"],eco:[0.95,0.05,0.62,1.76,1.22,3.36,-1.3,3.27,2.24,-0.32]},
+  {nome:"CERNHE",tipo:"Permissionária",ufs:["SP"],eco:[-12.76,-13.76,-13.99,-13.58,-12.71,-13.62,-13.23,-14.53,-10.47,-12.34]},
+  {nome:"CERPALO",tipo:"Permissionária",ufs:["SC"],eco:[2.7,1.92,2.47,3.63,2.95,5.31,0.41,5.36,3.65,1.32]},
+  {nome:"CERPRO",tipo:"Permissionária",ufs:["SP"],eco:[-11.29,-12.55,-12.38,-11.58,-11.12,-10.91,-12.69,-11.66,-8.83,-11.48]},
+  {nome:"CERRP",tipo:"Permissionária",ufs:["SP"],eco:[-19.31,-20.46,-21.07,-20.78,-19.34,-21.32,-19.32,-22.62,-16.38,-18.34]},
+  {nome:"CERSAD",tipo:"Permissionária",ufs:["SC"],eco:[-35.57,-35.68,-39.61,-38.16,-36.29,-38.67,-35.06,-40.09,-33.17,-34.73]},
+  {nome:"CERSUL",tipo:"Permissionária",ufs:["SC"],eco:[3.72,2.52,3.37,4.86,4.09,6.86,0.45,6.74,5.43,1.86]},
+  {nome:"CERTAJA",tipo:"Permissionária",ufs:["RS"],eco:[-2.06,-3.05,-2.72,-1.38,-1.8,0.25,-4.5,-0.01,-0.29,-3.39]},
+  {nome:"CERTEL",tipo:"Permissionária",ufs:["RS"],eco:[3.43,2.68,3.11,4.38,3.65,6.12,0.94,6.18,4.29,1.9]},
+  {nome:"CERTHIL",tipo:"Permissionária",ufs:["RS"],eco:[3.37,2.12,2.99,4.49,3.75,6.47,0.04,6.32,5.18,1.5]},
+  {nome:"CERTREL",tipo:"Permissionária",ufs:["SC"],eco:[-7.56,-8.39,-8.34,-8.0,-7.47,-7.87,-8.11,-8.52,-5.85,-7.38]},
+  {nome:"CERVAM",tipo:"Permissionária",ufs:["SP"],eco:[-7.93,-8.94,-8.83,-8.09,-7.79,-7.42,-9.17,-8.0,-5.97,-8.2]},
+  {nome:"CETRIL",tipo:"Permissionária",ufs:["SP"],eco:[-6.36,-7.48,-7.18,-6.13,-6.14,-4.96,-8.27,-5.42,-4.35,-7.11]},
+  {nome:"CHESP",tipo:"Concessionária",ufs:["GO"],eco:[-1.3,-3.07,-1.49,-0.75,-0.8,0.45,-3.67,-0.05,1.49,-1.97]},
+  {nome:"COCEL",tipo:"Concessionária",ufs:["PR"],eco:[-0.26,-2.35,-0.4,0.45,0.34,1.83,-3.12,1.3,2.87,-1.1]},
+  {nome:"CODESAM",tipo:"Permissionária",ufs:["SC"],eco:[-2.73,-3.89,-3.38,-2.04,-2.44,-0.37,-5.37,-0.66,-0.82,-4.08]},
+  {nome:"COOPERA",tipo:"Permissionária",ufs:["SC"],eco:[-21.78,-23.27,-23.44,-23.18,-21.71,-23.66,-22.01,-25.02,-18.39,-20.75]},
+  {nome:"COOPERALIANÇA",tipo:"Concessionária",ufs:["SC"],eco:[-5.92,-7.8,-6.35,-5.57,-5.43,-4.5,-8.29,-5.13,-2.73,-6.46]},
+  {nome:"COOPERCOCAL",tipo:"Permissionária",ufs:["SC"],eco:[4.55,3.51,4.32,5.74,4.91,7.74,1.53,7.74,5.93,2.76]},
+  {nome:"COOPERLUZ",tipo:"Permissionária",ufs:["RS"],eco:[5.11,3.67,4.69,6.32,5.55,8.4,1.28,8.19,7.29,3.0]},
+  {nome:"COOPERMILA",tipo:"Permissionária",ufs:["SC"],eco:[-9.34,-10.55,-10.19,-9.32,-9.13,-8.44,-11.01,-9.0,-7.14,-9.81]},
+  {nome:"COOPERNORTE",tipo:"Permissionária",ufs:["RS"],eco:[8.04,7.21,8.48,9.67,8.46,11.91,5.32,12.28,8.73,6.22]},
+  {nome:"COOPERSUL",tipo:"Permissionária",ufs:["RS"],eco:[-17.71,-19.0,-19.25,-19.11,-17.67,-19.72,-17.73,-21.06,-14.7,-16.67]},
+  {nome:"COOPERZEM",tipo:"Permissionária",ufs:["SC"],eco:[-19.1,-20.56,-20.55,-18.91,-18.89,-17.35,-21.98,-17.99,-16.21,-20.32]},
+  {nome:"COORSEL",tipo:"Permissionária",ufs:["SC"],eco:[-14.73,-15.87,-16.15,-15.03,-14.63,-14.16,-16.36,-14.89,-12.23,-15.16]},
+  {nome:"COPEL",tipo:"Concessionária",ufs:["PR"],eco:[2.33,0.49,2.34,3.15,2.91,4.55,-0.38,4.14,5.12,1.42]},
+  {nome:"COPREL",tipo:"Permissionária",ufs:["RS"],eco:[2.77,1.7,2.5,3.83,3.12,5.71,-0.04,5.63,4.3,1.16]},
+  {nome:"CPFL PAULISTA",tipo:"Concessionária",ufs:["SP"],eco:[-1.37,-3.34,-1.54,-0.74,-0.81,0.53,-4.07,0.01,1.67,-2.13]},
+  {nome:"CPFL PIRATININGA",tipo:"Concessionária",ufs:["SP"],eco:[5.44,3.4,5.45,6.38,6.07,7.9,2.23,7.48,8.47,4.31]},
+  {nome:"CPFL SANTA CRUZ",tipo:"Concessionária",ufs:["SP"],eco:[-7.08,-9.05,-7.44,-6.9,-6.58,-6.07,-9.09,-6.79,-3.89,-7.28]},
+  {nome:"CRELUZ",tipo:"Permissionária",ufs:["RS"],eco:[-7.77,-8.79,-8.73,-7.72,-7.62,-6.72,-9.45,-7.22,-5.8,-8.39]},
+  {nome:"CRERAL",tipo:"Permissionária",ufs:["RS"],eco:[3.62,2.7,3.47,4.7,3.94,6.52,1.06,6.54,4.81,2.09]},
+  {nome:"DCELT",tipo:"Concessionária",ufs:["SC"],eco:[3.78,1.87,3.81,4.67,4.37,6.14,0.89,5.74,6.58,2.77]},
+  {nome:"DEMEI",tipo:"Concessionária",ufs:["RS"],eco:[-1.16,-2.85,-1.35,-0.63,-0.67,0.53,-3.38,0.03,1.56,-1.78]},
+  {nome:"DMED",tipo:"Concessionária",ufs:["MG"],eco:[-15.39,-17.86,-16.17,-15.68,-14.85,-15.11,-17.34,-16.25,-11.0,-15.12]},
+  {nome:"EDP ES",tipo:"Concessionária",ufs:["ES"],eco:[5.46,3.7,5.75,6.49,6.09,7.96,2.73,7.65,8.11,4.45]},
+  {nome:"EDP SP",tipo:"Concessionária",ufs:["SP"],eco:[5.76,3.87,5.73,6.68,6.33,8.19,2.68,7.83,8.44,4.61]},
+  {nome:"JOÃO CESA",tipo:"Concessionária",ufs:["SC"],eco:[6.32,4.3,6.53,7.28,6.99,8.72,3.36,8.31,9.31,5.35]},
+  {nome:"URUSSANGA",tipo:"Concessionária",ufs:["SC"],eco:[-5.95,-7.83,-6.37,-5.6,-5.46,-4.53,-8.31,-5.17,-2.74,-6.47]},
+  {nome:"ELETROCAR",tipo:"Concessionária",ufs:["RS"],eco:[-1.2,-3.13,-1.36,-0.59,-0.64,0.67,-3.79,0.13,1.83,-1.92]},
+  {nome:"SANTA MARIA",tipo:"Concessionária",ufs:["ES"],eco:[5.44,3.72,5.54,6.43,6.0,7.99,2.61,7.72,7.82,4.32]},
+  {nome:"ENEL CE",tipo:"Concessionária",ufs:["CE"],eco:[-13.89,-16.14,-14.72,-14.2,-13.41,-13.65,-15.71,-14.73,-9.71,-13.66]},
+  {nome:"ENEL RJ",tipo:"Concessionária",ufs:["RJ"],eco:[3.49,2.04,3.61,4.31,3.98,5.59,1.2,5.33,5.62,2.61]},
+  {nome:"ENEL SP",tipo:"Concessionária",ufs:["SP"],eco:[3.57,1.51,3.61,4.49,4.23,5.99,0.48,5.52,6.77,2.54]},
+  {nome:"ENERGISA AC",tipo:"Concessionária",ufs:["AC"],eco:[-21.31,-22.86,-23.13,-23.75,-21.31,-25.73,-20.15,-27.72,-17.39,-19.03]},
+  {nome:"ENERGISA BORBOREMA",tipo:"Concessionária",ufs:["PB"],eco:[null,null,null,null,null,null,null,null,null,null]},
+  {nome:"ENERGISA MINAS RIO",tipo:"Concessionária",ufs:["MG", "RJ"],eco:[8.19,6.56,8.46,9.35,8.77,10.99,5.31,10.82,10.35,6.94]},
+  {nome:"ENERGISA MS",tipo:"Concessionária",ufs:["MS"],eco:[3.19,1.6,3.29,4.02,3.71,5.36,0.77,5.05,5.55,2.3]},
+  {nome:"ENERGISA MT",tipo:"Concessionária",ufs:["MT"],eco:[0.92,-0.82,0.94,1.56,1.46,2.72,-1.34,2.27,3.64,0.3]},
+  {nome:"ENERGISA PB",tipo:"Concessionária",ufs:["PB"],eco:[-5.62,-7.71,-5.99,-5.37,-5.07,-4.41,-7.85,-5.18,-2.05,-5.9]},
+  {nome:"ENERGISA RO",tipo:"Concessionária",ufs:["RO"],eco:[-25.99,-28.26,-27.7,-29.09,-25.84,-32.1,-24.15,-34.75,-20.88,-22.66]},
+  {nome:"ENERGISA SE",tipo:"Concessionária",ufs:["SE"],eco:[-1.98,-4.06,-2.1,-1.49,-1.4,-0.41,-4.36,-1.04,1.25,-2.43]},
+  {nome:"ENERGISA SUL SUDESTE",tipo:"Concessionária",ufs:["SP"],eco:[3.84,1.97,3.93,4.76,4.44,6.25,1.01,5.86,6.64,2.84]},
+  {nome:"ENERGISA TO",tipo:"Concessionária",ufs:["TO"],eco:[2.04,0.5,2.17,2.82,2.56,4.11,-0.12,3.77,4.46,1.3]},
+  {nome:"EQUATORIAL AL",tipo:"Concessionária",ufs:["AL"],eco:[-13.18,-15.41,-13.76,-13.71,-12.7,-13.68,-14.33,-14.82,-9.21,-12.45]},
+  {nome:"EQUATORIAL CEA",tipo:"Concessionária",ufs:["AP"],eco:[null,null,null,null,null,null,null,null,null,null]},
+  {nome:"EQUATORIAL CEEE",tipo:"Concessionária",ufs:["RS"],eco:[5.67,3.96,5.89,6.73,6.26,8.3,2.87,8.04,8.12,4.55]},
+  {nome:"EQUATORIAL GO",tipo:"Concessionária",ufs:["GO"],eco:[5.47,3.8,5.63,6.46,6.03,7.96,2.74,7.7,7.83,4.39]},
+  {nome:"EQUATORIAL MA",tipo:"Concessionária",ufs:["MA"],eco:[-0.26,-1.96,-0.32,0.26,0.23,1.31,-2.34,0.84,2.28,-0.77]},
+  {nome:"EQUATORIAL PA",tipo:"Concessionária",ufs:["PA"],eco:[0.89,-0.6,0.91,1.46,1.35,2.5,-1.04,2.12,3.17,0.35]},
+  {nome:"EQUATORIAL PI",tipo:"Concessionária",ufs:["PI"],eco:[0.25,-1.39,0.18,0.85,0.74,2.02,-1.94,1.6,2.72,-0.39]},
+  {nome:"HIDROPAN",tipo:"Concessionária",ufs:["RS"],eco:[-3.59,-5.33,-4.06,-3.16,-3.12,-1.93,-6.0,-2.54,-0.41,-4.28]},
+  {nome:"LIGHT",tipo:"Concessionária",ufs:["RJ"],eco:[0.45,-1.17,0.33,1.12,0.94,2.36,-2.0,1.95,3.1,-0.39]},
+  {nome:"MUXENERGIA",tipo:"Concessionária",ufs:["RS"],eco:[-3.55,-5.47,-3.89,-3.09,-3.02,-1.91,-6.01,-2.53,-0.3,-4.15]},
+  {nome:"NEOENERGIA BRASÍLIA",tipo:"Concessionária",ufs:["DF"],eco:[12.26,10.4,12.48,13.4,12.9,15.01,9.01,14.73,14.89,10.94]},
+  {nome:"NEOENERGIA COELBA",tipo:"Concessionária",ufs:["BA"],eco:[-3.2,-4.85,-3.42,-3.02,-2.77,-2.32,-4.79,-2.93,-0.57,-3.34]},
+  {nome:"NEOENERGIA COSERN",tipo:"Concessionária",ufs:["RN"],eco:[0.69,-1.14,0.68,1.34,1.24,2.56,-1.65,2.09,3.46,0.05]},
+  {nome:"NEOENERGIA ELEKTRO",tipo:"Concessionária",ufs:["SP"],eco:[4.2,2.5,4.27,5.09,4.74,6.51,1.52,6.19,6.65,3.2]},
+  {nome:"NEOENERGIA PERNAMBUCO",tipo:"Concessionária",ufs:["PE"],eco:[-4.19,-6.42,-4.45,-3.73,-3.57,-2.58,-6.81,-3.3,-0.5,-4.69]},
+  {nome:"NOVA PALMA",tipo:"Concessionária",ufs:["RS"],eco:[-1.16,-2.87,-1.33,-0.64,-0.68,0.5,-3.41,0.01,1.52,-1.78]},
+  {nome:"PACTO ENERGIA",tipo:"Concessionária",ufs:["PR"],eco:[null,null,null,null,null,null,null,null,null,null]},
+  {nome:"RGE",tipo:"Concessionária",ufs:["RS"],eco:[7.73,6.07,8.0,8.87,8.32,10.5,4.86,10.3,9.98,6.51]},
+  {nome:"RORAIMA ENERGIA",tipo:"Concessionária",ufs:["RR"],eco:[null,null,null,null,null,null,null,null,null,null]},
+  {nome:"SULGIPE",tipo:"Concessionária",ufs:["SE"],eco:[-16.71,-19.04,-17.58,-17.47,-16.25,-17.52,-17.81,-18.83,-12.42,-15.84]}
+];
+const DADOS={};DIST.forEach(d=>d.ufs.forEach(u=>(DADOS[u]=DADOS[u]||[]).push({nome:d.nome,tipo:d.tipo,eco:d.eco})));
 /* ============================== */
 
 const $=id=>document.getElementById(id);
 const svg=$("map"),tip=$("tip");
 const fmt=n=>n.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
 const avg=a=>a.length?a.reduce((x,y)=>x+y)/a.length:null;
-const sel=new Set();           // vazio = todos os ramos
+const TIPOS=[...new Set(DIST.map(d=>d.tipo))].filter(Boolean).sort();
+const sel=new Set(),selT=new Set();           // vazio = todos os ramos
 let fixo=null,atual=null,min=0,max=0,mediaBR=null,todas=[],comDado=[];
 
 const econ=d=>avg((sel.size?[...sel]:RAMOS.map((_,i)=>i)).map(i=>d.eco[i]).filter(x=>x!=null&&x!==undefined));
-const lista=uf=>(DADOS[uf]||[]).map(d=>({nome:d.nome,uf,economia:econ(d)}));
+const lista=uf=>(DADOS[uf]||[]).filter(d=>!selT.size||selT.has(d.tipo)).map(d=>({nome:d.nome,uf,economia:econ(d)}));
 const media=uf=>avg(lista(uf).map(d=>d.economia).filter(x=>x!=null));
 const cor=v=>{if(v==null)return "var(--none)";const t=max===min?1:(v-min)/(max-min);return `color-mix(in srgb, var(--c1) ${Math.round(t*100)}%, var(--c0))`};
 
@@ -109,11 +211,11 @@ function card(uf){
   sub.textContent=`${d>=0?"+":"−"}${Math.abs(d).toLocaleString("pt-BR",{maximumFractionDigits:1})} p.p. vs. média do Brasil`;
 }
 function show(uf,x,y){
-  const l=lista(uf);let h=`<h2>${NOMES[uf]} (${uf})</h2>`;
-  h+=`<div class="na" style="margin-bottom:4px">${sel.size?[...sel].sort((a,b)=>a-b).map(i=>RAMOS[i]).join(", "):"Todos os ramos"}</div>`;
+  const l0=lista(uf).sort((a,b)=>(b.economia??-1e9)-(a.economia??-1e9)),l=l0.slice(0,8),mais=l0.length-l.length;let h=`<h2>${NOMES[uf]} (${uf})</h2>`;
+  h+=`<div class="na" style="margin-bottom:4px">${sel.size?[...sel].sort((a,b)=>a-b).map(i=>RAMOS[i]).join(", "):"Todos os ramos"}${selT.size?" · "+[...selT].map(x=>x+"s").join(", "):""}</div>`;
   if(!l.length)h+=`<div class="na">Sem dados ainda</div>`;
-  l.forEach(d=>{h+=`<div class="row"><span>${d.nome}</span><span class="v ${d.economia==null?"na":""}">${d.economia==null?"a calcular":fmt(d.economia)}</span></div>`});
-  tip.innerHTML=h;tip.style.display="block";
+  l.forEach(d=>{h+=`<div class="row"><span>${d.nome}</span><span class="v ${d.economia==null?"na":""}">${d.economia==null?"sem dado":fmt(d.economia)}</span></div>`});
+  if(mais>0)h+=`<div class="na" style="margin-top:4px">+ ${mais} distribuidoras (veja a média no card)</div>`;tip.innerHTML=h;tip.style.display="block";
   const w=tip.offsetWidth,hh=tip.offsetHeight;
   tip.style.left=Math.max(8,Math.min(x+14,innerWidth-w-8))+"px";
   tip.style.top=Math.max(8,Math.min(y+14,innerHeight-hh-8))+"px";
@@ -122,10 +224,14 @@ function marca(uf){svg.querySelectorAll("path.on").forEach(p=>p.classList.remove
 
 /* filtro de ramos */
 function chips(){
-  const box=$("ramos");box.innerHTML="";
-  const mk=(t,on,fn)=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.setAttribute("aria-pressed",on);b.onclick=fn;box.appendChild(b)};
-  mk("Todos",sel.size===0,()=>{sel.clear();chips();render()});
-  RAMOS.forEach((r,i)=>mk(r,sel.has(i),()=>{sel.has(i)?sel.delete(i):sel.add(i);if(sel.size===RAMOS.length)sel.clear();chips();render()}));
+  const mk=(box,t,on,fn)=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.setAttribute("aria-pressed",on);b.onclick=fn;box.appendChild(b)};
+  const grupo=(id,itens,set,rot)=>{
+    const box=$(id);box.innerHTML="";
+    mk(box,"Todos",set.size===0,()=>{set.clear();chips();render()});
+    itens.forEach(([v,r])=>mk(box,r,set.has(v),()=>{set.has(v)?set.delete(v):set.add(v);if(set.size===itens.length)set.clear();chips();render()}));
+  };
+  grupo("ramos",RAMOS.map((r,i)=>[i,r]),sel);
+  grupo("tipos",TIPOS.map(x=>[x,x+"s"]),selT);
 }
 svg.addEventListener("pointermove",e=>{const p=e.target.closest("path");if(p){show(p.dataset.uf,e.clientX,e.clientY);card(p.dataset.uf)}else{tip.style.display="none";card(fixo)}});
 svg.addEventListener("pointerdown",e=>{const p=e.target.closest("path");if(!p)return;fixo=p.dataset.uf;marca(fixo);p.parentNode.appendChild(p);show(fixo,e.clientX,e.clientY);card(fixo)});
